@@ -1,6 +1,8 @@
 # adviseR
 
 <!-- badges: start -->
+![R-CMD-check](https://github.com/oxacclab/adviseR/workflows/R-CMD-check/badge.svg)
+[![codecov](https://codecov.io/gh/oxacclab/adviseR/branch/master/graph/badge.svg)](https://codecov.io/gh/oxacclab/adviseR)
 <!-- badges: end -->
 
 The goal of adviseR is to model the interaction of simple interconnected agents who have beliefs and exchange information.
