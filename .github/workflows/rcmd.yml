@@ -67,7 +67,7 @@ jobs:
       
       - name: Fix Windows igraph
         if: runner.os == 'Windows'
-        run: install.packages('igraph', type = 'source')  # igraph install fails in automatic version
+        run: install.packages('igraph', type = 'binary')  # igraph install fails in automatic version
         shell: Rscript {0}
 
       - name: Check
