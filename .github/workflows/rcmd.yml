@@ -63,7 +63,11 @@ jobs:
         run: |
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
-          install.packages('igraph', type = 'source')  # igraph install fails in automatic version
+        shell: Rscript {0}
+      
+      - name: Fix Windows igraph
+        if: runner.os == 'Windows'
+        run: install.packages('igraph', type = 'source')  # igraph install fails in automatic version
         shell: Rscript {0}
 
       - name: Check
