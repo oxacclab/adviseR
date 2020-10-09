@@ -68,7 +68,9 @@ jobs:
       
       - name: Fix Windows igraph
         if: runner.os == 'Windows'
-        run: install.packages('igraph', type = 'binary')  # igraph install fails in automatic version
+        run: |
+          install.packages('igraph', type = 'binary')  # igraph install fails in automatic version
+          remotes::install_github('oxacclab/adviseR')  # because windows fails parallel processing otherwise
         shell: Rscript {0}
 
       - name: Check
