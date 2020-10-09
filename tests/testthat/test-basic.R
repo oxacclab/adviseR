@@ -1,10 +1,11 @@
 context('Basic functionality')
 library(adviseR)
 
-test_that('Simple simulations', {
+test_that('Simple simulation', {
   load('data/basic-model.rda')
   model <- runSimulation(
-    n = list(p = 10, d = 200),
+    n_agents = 6,
+    n_decisions = 200,
     conf = T,
     biasMean = 1,
     biasSD = 1,
@@ -12,9 +13,10 @@ test_that('Simple simulations', {
     learningRate = .1,
     randomSeed = floor(pi * 1e6)
   )
-  # expect_identical(model$parameters, basic.model$parameters)
-  # expect_identical(model$model, basic.model$model)
-  expect_equal(typeof(model), typeof(basic.model))
+  # Can't do a simple identical check because $timings will be different,
+  # and $graphs have different ids (presumably to avoid conflicts)
+  expect_identical(model$parameters, basic.model$parameters)
+  expect_identical(model$model$agents, basic.model$model$agents)
 })
 
 test_that('Simulation network graphs', {

@@ -4,10 +4,19 @@
 \alias{runSimulations}
 \title{Run a suite of simulations defined by params}
 \usage{
-runSimulations(params)
+runSimulations(params, cores = parallel::detectCores(), ...)
 }
 \arguments{
 \item{params}{dataframe of parameters for simulations (see \code{runSimulation()} for details)}
+
+\item{cores}{number of cores to use in the cluster}
+
+\item{...}{
+  Arguments passed on to \code{\link[parallel:makeCluster]{parallel::makeCluster}}
+  \describe{
+    \item{\code{spec}}{A specification appropriate to the type of cluster.}
+    \item{\code{type}}{One of the supported types: see \sQuote{Details}.}
+  }}
 }
 \description{
 Run a suite of simulations defined by params

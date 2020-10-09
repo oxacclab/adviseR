@@ -5,7 +5,7 @@
 detailGraphs <- function(model) {
   # Need to check the iGraph node numbers follow the agents$id/graph ones
   agents <- model$model$agents
-  N <- model$parameters$n
+  N <- list(p = model$parameters$n_agents, d = model$parameters$n_decisions)
 
   # transpose
   g <- lapply(model$model$graphs, t)
@@ -54,8 +54,8 @@ settingsStr <- function(model) {
   timeElapsed <- difftime(model$times$end, model$times$start)
 
   paste0('Model parameters:\n',
-         'Agents = ', model$parameters$n$p,
-         '; Decision = ', model$parameters$n$d, '; ',
+         'Agents = ', model$parameters$n_agents,
+         '; Decisions = ', model$parameters$n_decisions, '; ',
          'ConfidenceWeighted = ', model$parameters$conf, '; \n',
          'Sensitivity SD = ', model$parameters$sensitivitySD, '; ',
          'Bias mean (SD) = +/-', model$parameters$biasMean,
@@ -149,10 +149,10 @@ plotGraph <- function(model, i, activeColours = T) {
        layout = layout_in_circle,
        vertex.color = V(model$model$graphs[[i]])$biasColour,
        edge.arrow.size = 0.5,
-       edge.width = weight / model$parameters$n$p * 5,
+       edge.width = weight / model$parameters$n_agents * 5,
        edge.lty = lines[weight],
        edge.color = E(model$model$graphs[[i]])$active,
-       edge.curved = 1 / model$parameters$n$p)
+       edge.curved = 1 / model$parameters$n_agents)
 }
 
 #' Plot a double-graph of network connectivity at the first and last decisions
@@ -164,7 +164,7 @@ plotGraph <- function(model, i, activeColours = T) {
 networkGraph <- function(model) {
   par(mfrow = c(1,2))
   plotGraph(model, 1, activeColours = F)
-  plotGraph(model, model$parameters$n$d, activeColours = F)
+  plotGraph(model, model$parameters$n_decisions, activeColours = F)
   invisible(NULL)
 }
 
@@ -174,7 +174,7 @@ networkGraph <- function(model) {
 #' @importFrom stats cor.test
 .biasCorrelation <- function(model) {
   cors <- NULL
-  for (d in 1:model$parameters$n$d) {
+  for (d in 1:model$parameters$n_decisions) {
     tmp <- model$model$graphs[[d]]
 
     test <- cor.test(as.numeric(tmp[attr = 'sharedBias']),
@@ -221,16 +221,16 @@ biasGraph <- function(model) {
 #' @importFrom stats cor.test
 .sensitivityCorrelation <- function(model) {
   sens <- NULL
-  for (d in 1:model$parameters$n$d) {
+  for (d in 1:model$parameters$n_decisions) {
     tmp <- model$model$graphs[[d]]
 
     # rows give outdegree, columns indegree
-    outdeg <- sapply(1:model$parameters$n$p, function(i) {
+    outdeg <- sapply(1:model$parameters$n_agents, function(i) {
       w <- tmp[attr = "weight"]
       w <- w[i, ]
       mean(w[-i]) # don't include self weight in average
     })
-    indeg <- sapply(1:model$parameters$n$p, function(i) {
+    indeg <- sapply(1:model$parameters$n_agents, function(i) {
       w <- tmp[attr = "weight"]
       w <- w[, i]
       mean(w[-i])
@@ -278,9 +278,9 @@ sensitivityGraph <- function(model) {
     geom_line() +
     # rug plots to show significant divergences from 0
     geom_rug(data = dplyr::filter(sens, .data$p < .05, .data$direction == 'In'),
-             sides = 't', size = model$parameters$n$d / 100 + 1) +
+             sides = 't', size = model$parameters$n_decisions / 100 + 1) +
     geom_rug(data = dplyr::filter(sens, .data$p < .05, .data$direction == 'Out'),
-             sides = 'b', size = model$parameters$n$d / 100 + 1) +
+             sides = 'b', size = model$parameters$n_decisions / 100 + 1) +
     scale_y_continuous(limits = c(-1, 1)) +
     labs(title = 'Sensitivity x Mean advice weight',
          subtitle = paste0(ifelse(model$parameters$conf,

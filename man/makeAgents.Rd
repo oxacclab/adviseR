@@ -7,14 +7,17 @@ time) and a set of weights governing how seriously the advice of other agents
 is taken (modified over time).}
 \usage{
 makeAgents(
-  n = list(p = 6, d = 200),
+  n_agents = n_agents,
+  n_decisions = n_decisions,
   biasMean = 1,
   biasSD = 1,
   sensitivitySD = 1
 )
 }
 \arguments{
-\item{n}{list of numbers (participants and decisions) to simulate}
+\item{n_agents}{number of agents to create}
+
+\item{n_decisions}{number of decisions}
 
 \item{biasMean}{the mean for the agents' bias distribution (agents' biases
 are drawn from normal distributions with mean +/- biasMean)}

@@ -1,5 +1,6 @@
 #' Run the simulation
-#' @param n list of numbers (participants and decisions) to simulate
+#' @param n_agents number of nodes in the network
+#' @param n_decisions number of decisions to simulate
 #' @param conf whether or not agents use confidence to update trust
 #' @param biasMean the mean for the agents' bias distribution (agents' biases
 #'   are drawn from normal distributions with mean +/- biasMean)
@@ -20,10 +21,12 @@
 #' }
 #'
 #' @importFrom stats runif
+#' @importFrom withr with_seed
 #'
 #' @export
 runSimulation <- function(
-  n = list(p = 6, d = 200),
+  n_agents = 6,
+  n_decisions = 200,
   conf = T,
   biasMean = 1,
   biasSD = 1,
@@ -34,62 +37,71 @@ runSimulation <- function(
 
   # print(paste0(
   #   "Running simulation: ",
-  #   "; AgentCount = ", n$p,
-  #   "; DecisionCount = ", n$d,
+  #   "; AgentCount = ", n_agents,
+  #   "; DecisionCount = ", n_decisions,
   #   "; BiasMean = ", biasMean,
   #   " (SD = ", biasSD, ")",
   #   "; sensitivitySD = ", sensitivitySD,
   #   "; learningRate = ", learningRate
   # ))
 
-  if (!is.na(randomSeed))
-    set.seed(randomSeed)
-  else
-    runif(1)  # initialise the seed
+  if (is.na(randomSeed))
+    randomSeed = runif(1, 1e6, 1e12)  # random random seed
 
-  out <- list(
-    times = list(
-      start = Sys.time()
-    ),
-    parameters = list(
-      n = n,
-      conf = conf,
-      biasMean = biasMean,
-      biasSD = biasSD,
-      sensitivitySD = sensitivitySD,
-      learningRate = learningRate,
-      randomSeed = .Random.seed[length(.Random.seed)]
-    )
+  with_seed(
+    randomSeed,
+    {
+      out <- list(
+        times = list(
+          start = Sys.time()
+        ),
+        parameters = list(
+          n_agents = n_agents,
+          n_decisions = n_decisions,
+          conf = as.logical(conf),
+          biasMean = biasMean,
+          biasSD = biasSD,
+          sensitivitySD = sensitivitySD,
+          learningRate = learningRate,
+          randomSeed = .Random.seed[length(.Random.seed)]
+        )
+      )
+
+      # Construct the agents
+      out$model <- makeAgents(
+        n_agents = n_agents,
+        n_decisions = n_decisions,
+        biasMean = biasMean,
+        biasSD = biasSD,
+        sensitivitySD = sensitivitySD
+      )
+
+      out$times$agentsCreated <- Sys.time()
+
+      # Run the model
+      for (d in 1:n_decisions)
+        out <- simulationStep(out, d)
+    }
   )
-
-  # Construct the agents
-  out$model <- makeAgents(
-    n = n, biasMean = biasMean, biasSD = biasSD, sensitivitySD = sensitivitySD
-  )
-
-  out$times$agentsCreated <- Sys.time()
-
-  # Run the model
-  for (d in 1:n$d)
-    out <- simulationStep(out, d)
 
   out$times$end <- Sys.time()
 
   detailGraphs(out)
-
 }
 
 #' Run a suite of simulations defined by params
 #' @param params dataframe of parameters for simulations (see \code{runSimulation()} for details)
+#' @param cores number of cores to use in the cluster
+#' @inheritDotParams parallel::makeCluster
 #'
 #' @importFrom parallel makeCluster stopCluster parLapply
 #'
 #' @export
-runSimulations <- function(params) {
-  cl <- parallel::makeCluster()
-  out <- parallel::parLapply(cl, params, function(p) {
+runSimulations <- function(params, cores = parallel::detectCores(), ...) {
+  cl <- parallel::makeCluster(cores, ...)
+  out <- parallel::parApply(cl, params, 1, function(p) {
     library(adviseR)
-    do.call(runSimulation, p)
+    do.call(runSimulation, as.list(p))
   })
   parallel::stopCluster(cl)
   out
@@ -110,7 +122,9 @@ runSimulations <- function(params) {
 #' @return model updated to include values for decision d
 simulationStep <- function(model, d) {
   # identify the agent tibble rows corresponding to decision d
-  rows <- (((d - 1) * model$parameters$n$p):(d * model$parameters$n$p - 1)) + 1
+  rows <- (
+    ((d - 1) * model$parameters$n_agents):(d * model$parameters$n_agents - 1)
+    ) + 1
 
   agents <- model$model$agents[rows, ]
 
@@ -121,11 +135,11 @@ simulationStep <- function(model, d) {
   agents$initial <-
     agents$truth +    # true value
     agents$bias +     # bias
-    rnorm(model$parameters$n$p, 0, 1/agents$sensitivity) # normally distributed noise with sd = 1/sensitivity
+    rnorm(model$parameters$n_agents, 0, 1/agents$sensitivity) # normally distributed noise with sd = 1/sensitivity
 
   # Advice
   agents$advisor <- sapply(agents$id, function(i)
-    base::sample((1:model$parameters$n$p)[-i], # never ask yourself!
+    base::sample((1:model$parameters$n_agents)[-i], # never ask yourself!
                  1))
 
   agents$weight <- diag(model$model$graphs[[d]][agents$advisor, ])
@@ -143,19 +157,19 @@ simulationStep <- function(model, d) {
   # Updating weights
   newWeights <- as.vector(model$model$graphs[[d]])
   if (model$parameters$conf) {
-    newWeights[(agents$id - 1) * model$parameters$n$p + agents$advisor] <-
-      newWeights[(agents$id - 1) * model$parameters$n$p + agents$advisor] +
+    newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] <-
+      newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] +
       ifelse((agents$initial > 0) == (agents$advice > 0),
              model$parameters$learningRate * abs(agents$initial), # agree
              -model$parameters$learningRate * abs(agents$initial)) # disagree
   } else {
-    newWeights[(agents$id - 1) * model$parameters$n$p + agents$advisor] <-
-      newWeights[(agents$id - 1) * model$parameters$n$p + agents$advisor] +
+    newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] <-
+      newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] +
       ifelse((agents$initial > 0) == (agents$advice > 0),
              model$parameters$learningRate, -model$parameters$learningRate)
   }
   newWeights <- pmax(0.0001, pmin(1, newWeights))
-  newWeights <- matrix(newWeights, model$parameters$n$p, model$parameters$n$p)
+  newWeights <- matrix(newWeights, model$parameters$n_agents, model$parameters$n_agents)
   diag(newWeights) <- 0
   model$model$graphs[[d + 1]] <- newWeights
 

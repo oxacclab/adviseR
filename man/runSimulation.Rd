@@ -5,7 +5,8 @@
 \title{Run the simulation}
 \usage{
 runSimulation(
-  n = list(p = 6, d = 200),
+  n_agents = 6,
+  n_decisions = 200,
   conf = T,
   biasMean = 1,
   biasSD = 1,
@@ -15,7 +16,9 @@ runSimulation(
 )
 }
 \arguments{
-\item{n}{list of numbers (participants and decisions) to simulate}
+\item{n_agents}{number of nodes in the network}
+
+\item{n_decisions}{number of decisions to simulate}
 
 \item{conf}{whether or not agents use confidence to update trust}
 

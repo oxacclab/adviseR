@@ -22,4 +22,5 @@ Imports:
     rlang,
     igraph,
     stats,
-    graphics
+    graphics,
+    withr
