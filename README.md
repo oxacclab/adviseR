@@ -41,4 +41,21 @@ We can then look at the network graph at the beginning and end:
 networkGraph(model)
 ```
 
+It is also possible to run several models in parallel (using the `parallel::` package).
+Note that individual models _are not_ run in parallel because each step depends upon the step before.
+Instead, this approach runs separate simulations in parallel.
+We can use this for, among other things, examining the robustness of a simulation by running multiple copies of it.
 
+``` r
+params <- data.frame(
+  n_agents = 6,
+  n_decisions = 200,
+  conf = c(T, F),
+  biasMean = 1,
+  biasSD = 1,
+  sensitivitySD = 1,
+  learningRate = .1,
+  randomSeed = floor(pi * 1e6)
+)
+models <- runSimulations(params, cores = nrow(params))
+```
