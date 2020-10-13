@@ -9,9 +9,13 @@ is taken (modified over time).}
 makeAgents(
   n_agents = n_agents,
   n_decisions = n_decisions,
-  biasMean = 1,
-  biasSD = 1,
-  sensitivitySD = 1
+  bias_mean = 1,
+  bias_sd = 1,
+  sensitivity_sd = 1,
+  trust_volatility_mean = 0.05,
+  trust_volatility_sd = 0.01,
+  bias_volatility_mean = 0.05,
+  bias_volatility_sd = 0.01
 )
 }
 \arguments{
@@ -19,13 +23,21 @@ makeAgents(
 
 \item{n_decisions}{number of decisions}
 
-\item{biasMean}{the mean for the agents' bias distribution (agents' biases
+\item{bias_mean}{the mean for the agents' bias distribution (agents' biases
 are drawn from normal distributions with mean +/- biasMean)}
 
-\item{biasSD}{standard deviation for the bias distribution}
+\item{bias_sd}{standard deviation for the bias distribution}
 
-\item{sensitivitySD}{standard deviation for distribution of agents'
+\item{sensitivity_sd}{standard deviation for distribution of agents'
 sensitivity (mean is 1)}
+
+\item{trust_volatility_mean}{the mean volatility of agents' trust}
+
+\item{trust_volatility_sd}{standard deviation}
+
+\item{bias_volatility_mean}{the mean volatility of agents' biases}
+
+\item{bias_volatility_sd}{standard deviation}
 }
 \value{
 \code{list(
@@ -37,4 +49,20 @@ sensitivity (mean is 1)}
 Agents are constructed with a bias on their binary decision (constant over
 time) and a set of weights governing how seriously the advice of other agents
 is taken (modified over time).
+}
+\details{
+the \code{agents} tibble is an n_agents*n_decisions by 12 table with
+\itemize{
+\item{"id"}{The agent's identifier}
+\item{"decision"}{The decision number}
+\item{"sensitivity"}{The agent's ability to do the task}
+\item{"trust_volatility"}{How quickly the agent's trust updates}
+\item{"bias_volatility"}{How quickly the agent's bias updates}
+\item{"bias"}{The agent's (initial) bias}
+\item{"truth"}{The true state of the world (same for a given decision for all agents)}
+\item{"initial"}{The agent's initial estimate of the truth}
+\item{"advisor"}{ID of the agent whose advice is received}
+\item{"weight"}{The weight assigned to the advice by the agent}
+\item{"final"}{The final decision of the agent}
+}
 }

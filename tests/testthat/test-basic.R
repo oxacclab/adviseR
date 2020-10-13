@@ -7,10 +7,13 @@ test_that('Simple simulation', {
     n_agents = 6,
     n_decisions = 200,
     conf = T,
-    biasMean = 1,
-    biasSD = 1,
-    sensitivitySD = 1,
-    learningRate = .1,
+    bias_mean = 1,
+    bias_sd = 1,
+    sensitivity_sd = 1,
+    trust_volatility_mean = .05,
+    trust_volatility_sd = .01,
+    bias_volatility_mean = .05,
+    bias_volatility_sd = .01,
     randomSeed = floor(pi * 1e6)
   )
   # Can't do a simple identical check because $timings will be different,
@@ -33,3 +36,8 @@ test_that('Sensitivity graph', {
   load('data/basic-model.rda')
   expect_equal('ggplot' %in% class(sensitivityGraph(basic.model)), T)
 })
+
+if (F) {
+  basic.model <- model
+  save(basic.model, file = 'tests/testthat/data/basic-model.rda')
+}

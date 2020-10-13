@@ -2,12 +2,15 @@
 #' @param n_agents number of nodes in the network
 #' @param n_decisions number of decisions to simulate
 #' @param conf whether or not agents use confidence to update trust
-#' @param biasMean the mean for the agents' bias distribution (agents' biases
+#' @param bias_mean the mean for the agents' bias distribution (agents' biases
 #'   are drawn from normal distributions with mean +/- biasMean)
-#' @param biasSD standard deviation for the bias distribution
-#' @param sensitivitySD standard deviation for distribution of agents'
+#' @param bias_sd standard deviation for the bias distribution
+#' @param sensitivity_sd standard deviation for distribution of agents'
 #'   sensitivity (mean is 1)
-#' @param learningRate size of the trust update at each time step
+#' @param trust_volatility_mean the mean volatility of agents' trust
+#' @param trust_volatility_sd standard deviation
+#' @param bias_volatility_mean the mean volatility of agents' biases
+#' @param bias_volatility_sd standard deviation
 #' @param randomSeed the random seed to start the simulation with
 #'
 #' @return a list with \itemize{
@@ -28,10 +31,13 @@ runSimulation <- function(
   n_agents = 6,
   n_decisions = 200,
   conf = T,
-  biasMean = 1,
-  biasSD = 1,
-  sensitivitySD = 1,
-  learningRate = .1,
+  bias_mean = 1,
+  bias_sd = 1,
+  sensitivity_sd = 1,
+  trust_volatility_mean = .05,
+  trust_volatility_sd = .01,
+  bias_volatility_mean = .05,
+  bias_volatility_sd = .01,
   randomSeed = NA
 ) {
 
@@ -39,17 +45,20 @@ runSimulation <- function(
   #   "Running simulation: ",
   #   "; AgentCount = ", n_agents,
   #   "; DecisionCount = ", n_decisions,
-  #   "; BiasMean = ", biasMean,
-  #   " (SD = ", biasSD, ")",
-  #   "; sensitivitySD = ", sensitivitySD,
-  #   "; learningRate = ", learningRate
+  #   "; BiasMean = ", bias_mean,
+  #   " (SD = ", bias_sd, ")",
+  #   "; sensitivitySD = ", sensitivity_sd,
+  #   "; TrustVolatility = ", trust_volatility_mean,
+  #   " (SD = ", trust_volatility_sd, ")",
+  #   "; BiasVolatility = ", bias_volatility_mean,
+  #   " (SD = ", bias_volatility_sd, ")",
   # ))
 
   if (is.na(randomSeed))
-    randomSeed = runif(1, 1e6, 1e12)  # random random seed
+    randomSeed = round(runif(1, 1e6, 1e8))  # random random seed
 
   with_seed(
-    randomSeed,
+    as.integer(randomSeed),
     {
       out <- list(
         times = list(
@@ -59,10 +68,13 @@ runSimulation <- function(
           n_agents = n_agents,
           n_decisions = n_decisions,
           conf = as.logical(conf),
-          biasMean = biasMean,
-          biasSD = biasSD,
-          sensitivitySD = sensitivitySD,
-          learningRate = learningRate,
+          bias_mean = bias_mean,
+          bias_sd = bias_sd,
+          sensitivity_sd = sensitivity_sd,
+          trust_volatility_mean = trust_volatility_mean,
+          trust_volatility_sd = trust_volatility_sd,
+          bias_volatility_mean = bias_volatility_mean,
+          bias_volatility_sd = bias_volatility_sd,
           randomSeed = .Random.seed[length(.Random.seed)]
         )
       )
@@ -71,9 +83,13 @@ runSimulation <- function(
       out$model <- makeAgents(
         n_agents = n_agents,
         n_decisions = n_decisions,
-        biasMean = biasMean,
-        biasSD = biasSD,
-        sensitivitySD = sensitivitySD
+        bias_mean = bias_mean,
+        bias_sd = bias_sd,
+        sensitivity_sd = sensitivity_sd,
+        trust_volatility_mean = trust_volatility_mean,
+        trust_volatility_sd = trust_volatility_sd,
+        bias_volatility_mean = bias_volatility_mean,
+        bias_volatility_sd = bias_volatility_sd
       )
 
       out$times$agentsCreated <- Sys.time()
@@ -154,19 +170,30 @@ simulationStep <- function(model, d) {
   # Write output to the model
   model$model$agents[rows, ] <- agents
 
+  # Updating bias for next time
+  if (max(rows) != nrow(model$model$agents)) {
+    # Nudge bias towards observed (i.e. based on final decision) truth
+    model$model$agents[rows + model$parameters$n_agents, "bias"] <-
+      ifelse(
+        agents$final > 0,
+        agents$bias + agents$bias_volatility,
+        agents$bias - agents$bias_volatility
+      )
+  }
+
   # Updating weights
   newWeights <- as.vector(model$model$graphs[[d]])
   if (model$parameters$conf) {
     newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] <-
       newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] +
       ifelse((agents$initial > 0) == (agents$advice > 0),
-             model$parameters$learningRate * abs(agents$initial), # agree
-             -model$parameters$learningRate * abs(agents$initial)) # disagree
+             agents$trust_volatility * abs(agents$initial), # agree
+             -agents$trust_volatility * abs(agents$initial)) # disagree
   } else {
     newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] <-
       newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] +
       ifelse((agents$initial > 0) == (agents$advice > 0),
-             model$parameters$learningRate, -model$parameters$learningRate)
+             agents$trust_volatility, -agents$trust_volatility)
   }
   newWeights <- pmax(0.0001, pmin(1, newWeights))
   newWeights <- matrix(newWeights, model$parameters$n_agents, model$parameters$n_agents)

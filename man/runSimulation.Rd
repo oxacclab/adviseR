@@ -8,10 +8,13 @@ runSimulation(
   n_agents = 6,
   n_decisions = 200,
   conf = T,
-  biasMean = 1,
-  biasSD = 1,
-  sensitivitySD = 1,
-  learningRate = 0.1,
+  bias_mean = 1,
+  bias_sd = 1,
+  sensitivity_sd = 1,
+  trust_volatility_mean = 0.05,
+  trust_volatility_sd = 0.01,
+  bias_volatility_mean = 0.05,
+  bias_volatility_sd = 0.01,
   randomSeed = NA
 )
 }
@@ -22,15 +25,21 @@ runSimulation(
 
 \item{conf}{whether or not agents use confidence to update trust}
 
-\item{biasMean}{the mean for the agents' bias distribution (agents' biases
+\item{bias_mean}{the mean for the agents' bias distribution (agents' biases
 are drawn from normal distributions with mean +/- biasMean)}
 
-\item{biasSD}{standard deviation for the bias distribution}
+\item{bias_sd}{standard deviation for the bias distribution}
 
-\item{sensitivitySD}{standard deviation for distribution of agents'
+\item{sensitivity_sd}{standard deviation for distribution of agents'
 sensitivity (mean is 1)}
 
-\item{learningRate}{size of the trust update at each time step}
+\item{trust_volatility_mean}{the mean volatility of agents' trust}
+
+\item{trust_volatility_sd}{standard deviation}
+
+\item{bias_volatility_mean}{the mean volatility of agents' biases}
+
+\item{bias_volatility_sd}{standard deviation}
 
 \item{randomSeed}{the random seed to start the simulation with}
 }

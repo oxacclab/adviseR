@@ -161,6 +161,7 @@ plotGraph <- function(model, i, activeColours = T) {
 #' @importFrom graphics par
 #'
 #' @return NULL (invisible)
+#' @export
 networkGraph <- function(model) {
   par(mfrow = c(1,2))
   plotGraph(model, 1, activeColours = F)
