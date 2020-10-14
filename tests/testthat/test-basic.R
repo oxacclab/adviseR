@@ -12,8 +12,8 @@ test_that('Simple simulation', {
     sensitivity_sd = 1,
     trust_volatility_mean = .05,
     trust_volatility_sd = .01,
-    bias_volatility_mean = .05,
-    bias_volatility_sd = .01,
+    bias_volatility_mean = 0,
+    bias_volatility_sd = 0,
     randomSeed = floor(pi * 1e6)
   )
   # Can't do a simple identical check because $timings will be different,
