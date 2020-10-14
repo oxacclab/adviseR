@@ -36,7 +36,8 @@ sensitivity (mean is 1)}
 
 \item{trust_volatility_sd}{standard deviation}
 
-\item{bias_volatility_mean}{the mean volatility of agents' biases}
+\item{bias_volatility_mean}{the mean volatility of agents' biases (move this
+proportion towards the final decision value from current bias at each step)}
 
 \item{bias_volatility_sd}{standard deviation}
 

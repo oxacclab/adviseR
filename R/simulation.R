@@ -9,7 +9,8 @@
 #'   sensitivity (mean is 1)
 #' @param trust_volatility_mean the mean volatility of agents' trust
 #' @param trust_volatility_sd standard deviation
-#' @param bias_volatility_mean the mean volatility of agents' biases
+#' @param bias_volatility_mean the mean volatility of agents' biases (move this
+#'   proportion towards the final decision value from current bias at each step)
 #' @param bias_volatility_sd standard deviation
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
 #'   of starting trust weights between agents. Coerced to numeric
@@ -179,11 +180,8 @@ simulationStep <- function(model, d) {
   if (max(rows) != nrow(model$model$agents)) {
     # Nudge bias towards observed (i.e. based on final decision) truth
     model$model$agents[rows + model$parameters$n_agents, "bias"] <-
-      ifelse(
-        agents$final > 0,
-        agents$bias + agents$bias_volatility,
-        agents$bias - agents$bias_volatility
-      )
+      (agents$bias * (1/agents$bias_volatility) +
+         agents$final * agents$bias_volatility) / 2
   }
 
   # Updating weights

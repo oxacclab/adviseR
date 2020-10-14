@@ -10,7 +10,8 @@
 #'   sensitivity (mean is 1)
 #' @param trust_volatility_mean the mean volatility of agents' trust
 #' @param trust_volatility_sd standard deviation
-#' @param bias_volatility_mean the mean volatility of agents' biases
+#' @param bias_volatility_mean the mean volatility of agents' biases (move this
+#'   proportion towards the final decision value from current bias at each step)
 #' @param bias_volatility_sd standard deviation
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
 #'   of starting trust weights between agents. Coerced to numeric
