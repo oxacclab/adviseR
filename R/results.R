@@ -57,10 +57,14 @@ settingsStr <- function(model) {
          'Agents = ', model$parameters$n_agents,
          '; Decisions = ', model$parameters$n_decisions, '; ',
          'ConfidenceWeighted = ', model$parameters$conf, '; \n',
-         'Sensitivity SD = ', model$parameters$sensitivitySD, '; ',
-         'Bias mean (SD) = +/-', model$parameters$biasMean,
-         ' (', model$parameters$biasSD, '); ',
-         'Learning rate = ', model$parameters$learningRate, '\n',
+         'Sensitivity SD = ', model$parameters$sensitivity_sd, '; ',
+         'Bias mean (SD) = +/-', model$parameters$bias_mean,
+         ' (', model$parameters$bias_sd, '); ',
+         'Trust/Bias volatility (SD) = ',
+         model$parameters$trust_volatility_mean,
+         ' (', model$parameters$trust_volatility_sd, ') / ',
+         model$parameters$bias_volatility_mean,
+         ' (', model$parameters$bias_volatility_sd, ');\n',
          'Model run ', format(model$times$start, "%F_%H-%M-%S"), ' (',
          'runtime = ', round(as.numeric(timeElapsed), 1), 's)')
 }
@@ -123,13 +127,14 @@ biasToColourString <- function(b, colour = c('r', 'g', 'b'),
 #' @param model network to plot
 #' @param i generation to plot
 #' @param activeColours whether to highlight the active advice connections
+#' @inheritDotParams igraph::plot.igraph
 #'
 #' @return plot object
 #'
 #' @importFrom igraph E E<- V layout_in_circle
 #'
 #' @export
-plotGraph <- function(model, i, activeColours = T) {
+plotGraph <- function(model, i, activeColours = T, ...) {
 
   title <- paste("Advice weights after decision", i - 1)
 
@@ -144,15 +149,18 @@ plotGraph <- function(model, i, activeColours = T) {
   E(model$model$graphs[[i]])$active <-
     weightToColourString(model$model$graphs[[i]])
 
-  plot(model$model$graphs[[i]],
-       main = title,
-       layout = layout_in_circle,
-       vertex.color = V(model$model$graphs[[i]])$biasColour,
-       edge.arrow.size = 0.5,
-       edge.width = weight / model$parameters$n_agents * 5,
-       edge.lty = lines[weight],
-       edge.color = E(model$model$graphs[[i]])$active,
-       edge.curved = 1 / model$parameters$n_agents)
+  plot(
+    model$model$graphs[[i]],
+    main = title,
+    layout = layout_in_circle,
+    vertex.color = V(model$model$graphs[[i]])$biasColour,
+    edge.arrow.size = 0.5,
+    edge.width = weight / model$parameters$n_agents * 5,
+    edge.lty = lines[weight],
+    edge.color = E(model$model$graphs[[i]])$active,
+    edge.curved = 1 / model$parameters$n_agents,
+    ...
+  )
 }
 
 #' Plot a double-graph of network connectivity at the first and last decisions

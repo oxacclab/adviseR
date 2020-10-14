@@ -25,12 +25,16 @@ Here we set up a small basic network:
 library(adviseR)
 
 model <- runSimulation(
-  n = list(p = 10, d = 200),
+  n_agents = 6,
+  n_decisions = 200,
   conf = T,
-  biasMean = 1,
-  biasSD = 1,
-  sensitivitySD = 1,
-  learningRate = .1
+  bias_mean = 1,
+  bias_sd = 1,
+  sensitivity_sd = 1,
+  trust_volatility_mean = .05,
+  trust_volatility_sd = .01,
+  bias_volatility_mean = .05,
+  bias_volatility_sd = .01
 )
 
 ```
@@ -51,11 +55,13 @@ params <- data.frame(
   n_agents = 6,
   n_decisions = 200,
   conf = c(T, F),
-  biasMean = 1,
-  biasSD = 1,
-  sensitivitySD = 1,
-  learningRate = .1,
-  randomSeed = floor(pi * 1e6)
+  bias_mean = 1,
+  bias_sd = 1,
+  sensitivity_sd = 1,
+  trust_volatility_mean = .05,
+  trust_volatility_sd = .01,
+  bias_volatility_mean = .05,
+  bias_volatility_sd = .01
 )
 models <- runSimulations(params, cores = nrow(params))
 ```
