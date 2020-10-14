@@ -127,6 +127,7 @@ biasToColourString <- function(b, colour = c('r', 'g', 'b'),
 #' @param model network to plot
 #' @param i generation to plot
 #' @param activeColours whether to highlight the active advice connections
+#' @param layout layout for the graph
 #' @inheritDotParams igraph::plot.igraph
 #'
 #' @return plot object
@@ -134,7 +135,13 @@ biasToColourString <- function(b, colour = c('r', 'g', 'b'),
 #' @importFrom igraph E E<- V layout_in_circle
 #'
 #' @export
-plotGraph <- function(model, i, activeColours = T, ...) {
+plotGraph <- function(
+  model,
+  i,
+  activeColours = T,
+  layout = igraph::layout_in_circle,
+  ...
+) {
 
   title <- paste("Advice weights after decision", i - 1)
 
@@ -152,7 +159,7 @@ plotGraph <- function(model, i, activeColours = T, ...) {
   plot(
     model$model$graphs[[i]],
     main = title,
-    layout = layout_in_circle,
+    layout = layout,
     vertex.color = V(model$model$graphs[[i]])$biasColour,
     edge.arrow.size = 0.5,
     edge.width = weight / model$parameters$n_agents * 5,

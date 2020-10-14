@@ -4,10 +4,18 @@
 \alias{networkGraph}
 \title{Plot a double-graph of network connectivity at the first and last decisions}
 \usage{
-networkGraph(model)
+networkGraph(model, ...)
 }
 \arguments{
 \item{model}{network}
+
+\item{...}{
+  Arguments passed on to \code{\link[=plotGraph]{plotGraph}}
+  \describe{
+    \item{\code{i}}{generation to plot}
+    \item{\code{activeColours}}{whether to highlight the active advice connections}
+    \item{\code{layout}}{layout for the graph}
+  }}
 }
 \value{
 NULL (invisible)

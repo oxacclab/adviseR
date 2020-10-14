@@ -4,7 +4,7 @@
 \alias{plotGraph}
 \title{Plot an igraph of a network}
 \usage{
-plotGraph(model, i, activeColours = T, ...)
+plotGraph(model, i, activeColours = T, layout = igraph::layout_in_circle, ...)
 }
 \arguments{
 \item{model}{network to plot}
@@ -12,6 +12,8 @@ plotGraph(model, i, activeColours = T, ...)
 \item{i}{generation to plot}
 
 \item{activeColours}{whether to highlight the active advice connections}
+
+\item{layout}{layout for the graph}
 
 \item{...}{
   Arguments passed on to \code{\link[igraph:plot.igraph]{igraph::plot.igraph}}
