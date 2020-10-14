@@ -165,15 +165,16 @@ plotGraph <- function(model, i, activeColours = T, ...) {
 
 #' Plot a double-graph of network connectivity at the first and last decisions
 #' @param model network
+#' @inheritDotParams plotGraph
 #'
 #' @importFrom graphics par
 #'
 #' @return NULL (invisible)
 #' @export
-networkGraph <- function(model) {
+networkGraph <- function(model, ...) {
   par(mfrow = c(1,2))
-  plotGraph(model, 1, activeColours = F)
-  plotGraph(model, model$parameters$n_decisions, activeColours = F)
+  plotGraph(model, 1, activeColours = F, ...)
+  plotGraph(model, model$parameters$n_decisions, activeColours = F, ...)
   invisible(NULL)
 }
 
