@@ -180,8 +180,8 @@ simulationStep <- function(model, d) {
   if (max(rows) != nrow(model$model$agents)) {
     # Nudge bias towards observed (i.e. based on final decision) truth
     model$model$agents[rows + model$parameters$n_agents, "bias"] <-
-      (agents$bias * (1 - agents$bias_volatility) +
-         agents$final * agents$bias_volatility) / 2
+      agents$bias * (1 - agents$bias_volatility) +
+      agents$final * agents$bias_volatility
   }
 
   # Updating weights
