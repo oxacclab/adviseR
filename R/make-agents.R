@@ -12,6 +12,8 @@
 #' @param trust_volatility_sd standard deviation
 #' @param bias_volatility_mean the mean volatility of agents' biases
 #' @param bias_volatility_sd standard deviation
+#' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
+#'   of starting trust weights between agents. Coerced to numeric
 #'
 #' @details the \code{agents} tibble is an n_agents*n_decisions by 12 table with
 #' \itemize{
@@ -45,7 +47,8 @@ makeAgents <- function(
   trust_volatility_mean = .05,
   trust_volatility_sd = .01,
   bias_volatility_mean = .05,
-  bias_volatility_sd = .01
+  bias_volatility_sd = .01,
+  starting_graph = NULL
 ) {
   bias <- ifelse(runif(n_agents) > .5,
                  rnorm(n_agents, bias_mean, bias_sd),
@@ -79,9 +82,18 @@ makeAgents <- function(
     across(ends_with('volatility'), ~ abs(.))
   )
 
-  # Set up initial trust weights as .25, .5, .75 at random
-  graphs <- list(matrix(as.numeric(cut(runif(n_agents ^ 2), 3))/4, n_agents, n_agents))
-  diag(graphs[[1]]) <- 0
+  if (!is.null(starting_graph)) {
+    if (length(starting_graph) == 1) {
+      graph <- matrix(as.numeric(starting_graph), n_agents, n_agents)
+    } else {
+      graph <- matrix(as.numeric(starting_graph), n_agents, n_agents)
+    }
+  } else {
+    # Set up initial trust weights as .25, .5, .75 at random
+    graph <- matrix(as.numeric(cut(runif(n_agents ^ 2), 3))/4, n_agents, n_agents)
+  }
 
-  list(agents = agents, graphs = graphs)
+  diag(graph) <- 0
+
+  list(agents = agents, graphs = list(graph))
 }

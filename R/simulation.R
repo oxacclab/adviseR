@@ -11,6 +11,8 @@
 #' @param trust_volatility_sd standard deviation
 #' @param bias_volatility_mean the mean volatility of agents' biases
 #' @param bias_volatility_sd standard deviation
+#' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
+#'   of starting trust weights between agents. Coerced to numeric
 #' @param randomSeed the random seed to start the simulation with
 #'
 #' @return a list with \itemize{
@@ -38,6 +40,7 @@ runSimulation <- function(
   trust_volatility_sd = .01,
   bias_volatility_mean = .05,
   bias_volatility_sd = .01,
+  starting_graph = NULL,
   randomSeed = NA
 ) {
 
@@ -75,6 +78,7 @@ runSimulation <- function(
           trust_volatility_sd = trust_volatility_sd,
           bias_volatility_mean = bias_volatility_mean,
           bias_volatility_sd = bias_volatility_sd,
+          starting_graph = class(starting_graph)[1],
           randomSeed = .Random.seed[length(.Random.seed)]
         )
       )
@@ -89,7 +93,8 @@ runSimulation <- function(
         trust_volatility_mean = trust_volatility_mean,
         trust_volatility_sd = trust_volatility_sd,
         bias_volatility_mean = bias_volatility_mean,
-        bias_volatility_sd = bias_volatility_sd
+        bias_volatility_sd = bias_volatility_sd,
+        starting_graph = starting_graph
       )
 
       out$times$agentsCreated <- Sys.time()

@@ -15,7 +15,8 @@ makeAgents(
   trust_volatility_mean = 0.05,
   trust_volatility_sd = 0.01,
   bias_volatility_mean = 0.05,
-  bias_volatility_sd = 0.01
+  bias_volatility_sd = 0.01,
+  starting_graph = NULL
 )
 }
 \arguments{
@@ -38,6 +39,9 @@ sensitivity (mean is 1)}
 \item{bias_volatility_mean}{the mean volatility of agents' biases}
 
 \item{bias_volatility_sd}{standard deviation}
+
+\item{starting_graph}{single number, vector, or n_agents-by-n_agents matrix
+of starting trust weights between agents. Coerced to numeric}
 }
 \value{
 \code{list(

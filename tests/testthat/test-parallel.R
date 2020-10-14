@@ -29,6 +29,8 @@ test_that('Simple parallel simulation', {
 })
 
 if (F) {
+  basic.model <- models[[1]]
   basic.noconf.model <- models[[2]]
+  save(basic.model, file = 'tests/testthat/data/basic-model.rda')
   save(basic.noconf.model, file = 'tests/testthat/data/basic-noconf-model.rda')
 }

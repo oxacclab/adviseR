@@ -36,8 +36,3 @@ test_that('Sensitivity graph', {
   load('data/basic-model.rda')
   expect_equal('ggplot' %in% class(sensitivityGraph(basic.model)), T)
 })
-
-if (F) {
-  basic.model <- model
-  save(basic.model, file = 'tests/testthat/data/basic-model.rda')
-}
