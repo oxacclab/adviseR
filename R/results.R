@@ -12,10 +12,11 @@ detailGraphs <- function(model) {
   g <- lapply(g, graph_from_adjacency_matrix, weighted = T)
 
   for (i in 1:N$d) {
+    rows <- which(agents$decision == i)
 
     active <- rep(0, N$p * N$p)
     # fill in colour for active advice (vectorised)
-    active[0:(N$p - 1) * N$p + agents$advisor[agents$decision == i]] <- 'green'
+    active[0:(N$p - 1) * N$p + agents$advisor[rows]] <- 'green'
 
     active <- matrix(active, N$p, N$p)
     active <- t(active)
@@ -36,10 +37,10 @@ detailGraphs <- function(model) {
       ifelse((E(g[[i]])$headBias < 0) == (E(g[[i]])$tailBias < 0), 1, -1)
 
     # colour vertices by bias
-    V(g[[i]])$bias <- agents$bias[1:N$p]
-    V(g[[i]])$biasColour <- ifelse(agents$bias[1:N$p] > 0,
-                                   biasToColourString(agents$bias[1:N$p], 'b'),
-                                   biasToColourString(agents$bias[1:N$p], 'r'))
+    V(g[[i]])$bias <- agents$bias[rows]
+    V(g[[i]])$biasColour <- ifelse(agents$bias[rows] > 0,
+                                   biasToColourString(agents$bias[rows], 'b'),
+                                   biasToColourString(agents$bias[rows], 'r'))
   }
 
   model$model$graphs <- g
