@@ -17,6 +17,12 @@
 #' @param randomSeed the random seed to start the simulation with
 #' @param truth_fun function taking the simulation and decision number as
 #'   arguments and returning the true state of the world as a single number
+#' @param weighted_sampling a non-zero/NA value means agents choose who to seek
+#'   advice from according to how likely they are to trust the advice. The
+#'   weights are multiplied by this value (so values > 1 make source selection
+#'   more pronounced than advice weighting, and values < 1 make source selection
+#'   less pronounced than advice weighting). Negative values will make agents
+#'   actively seek out those they do not trust for advice.
 #'
 #' @return a list with \itemize{
 #'  \item{"times"}{Timestamps associated with simulation stages.}
@@ -45,7 +51,8 @@ runSimulation <- function(
   bias_volatility_sd = .01,
   starting_graph = NULL,
   randomSeed = NA,
-  truth_fun = function(model, d) stats::rnorm(1)
+  truth_fun = function(model, d) stats::rnorm(1),
+  weighted_sampling = NA
 ) {
 
   # print(paste0(
@@ -85,7 +92,8 @@ runSimulation <- function(
           starting_graph_type = class(starting_graph)[1],
           starting_graph = starting_graph,
           randomSeed = .Random.seed[length(.Random.seed)],
-          truth_fun = truth_fun
+          truth_fun = truth_fun,
+          weighted_sampling = weighted_sampling
         )
       )
 
@@ -163,17 +171,36 @@ simulationStep <- function(model, d) {
   agents$initial <-
     agents$truth +    # true value
     agents$bias +     # bias
-    rnorm(model$parameters$n_agents, 0, 1/agents$sensitivity) # normally distributed noise with sd = 1/sensitivity
+    # normally distributed noise with sd = 1/sensitivity
+    rnorm(model$parameters$n_agents, 0, 1/agents$sensitivity)
 
   # Advice
+
+  # pick an advisor
+  w <- model$parameters$weighted_sampling
+  if (is.na(w) || w == 0) {
+    probabilities <- matrix(
+      1,
+      nrow = model$parameters$n_agents,
+      ncol = model$parameters$n_agents
+    )
+  } else {
+    probabilities <- model$model$graphs[[d]] * w
+  }
+  # never ask yourself - set diag to just below minimum value
+  # this approach supports negative values of w without self-seeking
+  diag(probabilities) <- apply(probabilities, 1, min) - .0001
   agents$advisor <- sapply(agents$id, function(i)
-    base::sample((1:model$parameters$n_agents)[-i], # never ask yourself!
-                 1))
+    base::sample(
+      col(probabilities)[i, ], # ids are column numbers
+      size = 1,
+      prob = probabilities[i, ] - min(probabilities[i, ]) # self prob to zero
+    )
+  )
 
   agents$weight <- diag(model$model$graphs[[d]][agents$advisor, ])
 
-  agents$advice <-
-    agents$initial[agents$advisor]
+  agents$advice <- agents$initial[agents$advisor]
 
   agents$final <-
     (agents$initial * (1 - agents$weight)) +

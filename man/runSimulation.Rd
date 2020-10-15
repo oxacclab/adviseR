@@ -17,7 +17,8 @@ runSimulation(
   bias_volatility_sd = 0.01,
   starting_graph = NULL,
   randomSeed = NA,
-  truth_fun = function(model, d) stats::rnorm(1)
+  truth_fun = function(model, d) stats::rnorm(1),
+  weighted_sampling = NA
 )
 }
 \arguments{
@@ -51,6 +52,13 @@ of starting trust weights between agents. Coerced to numeric}
 
 \item{truth_fun}{function taking the simulation and decision number as
 arguments and returning the true state of the world as a single number}
+
+\item{weighted_sampling}{a non-zero/NA value means agents choose who to seek
+advice from according to how likely they are to trust the advice. The
+weights are multiplied by this value (so values > 1 make source selection
+more pronounced than advice weighting, and values < 1 make source selection
+less pronounced than advice weighting). Negative values will make agents
+actively seek out those they do not trust for advice.}
 }
 \value{
 a list with \itemize{

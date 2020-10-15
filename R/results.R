@@ -57,7 +57,7 @@ settingsStr <- function(model) {
          'Agents = ', model$parameters$n_agents,
          '; Decisions = ', model$parameters$n_decisions, '; ',
          'ConfidenceWeighted = ', model$parameters$conf, '; ',
-         'Custom starting trust = ', model$parameters$starting_graph_type, ';\n',
+         'Weighted sampling = ', model$parameters$weighted_sampling, ';\n',
          'Sensitivity SD = ', model$parameters$sensitivity_sd, '; ',
          'Bias mean (SD) = +/-', model$parameters$bias_mean,
          ' (', model$parameters$bias_sd, '); ',
@@ -66,6 +66,7 @@ settingsStr <- function(model) {
          ' (', model$parameters$trust_volatility_sd, ') / ',
          model$parameters$bias_volatility_mean,
          ' (', model$parameters$bias_volatility_sd, ');\n',
+         'Custom starting trust = ', model$parameters$starting_graph_type, '; ',
          'Model run ', format(model$times$start, "%F_%H-%M-%S"), ' (',
          'runtime = ', round(as.numeric(timeElapsed), 1), 's)')
 }
