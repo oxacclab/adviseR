@@ -15,6 +15,8 @@
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
 #'   of starting trust weights between agents. Coerced to numeric
 #' @param randomSeed the random seed to start the simulation with
+#' @param truth_fun function taking the simulation and decision number as
+#'   arguments and returning the true state of the world as a single number
 #'
 #' @return a list with \itemize{
 #'  \item{"times"}{Timestamps associated with simulation stages.}
@@ -42,7 +44,8 @@ runSimulation <- function(
   bias_volatility_mean = .05,
   bias_volatility_sd = .01,
   starting_graph = NULL,
-  randomSeed = NA
+  randomSeed = NA,
+  truth_fun = function(model, d) stats::rnorm(1)
 ) {
 
   # print(paste0(
@@ -79,8 +82,10 @@ runSimulation <- function(
           trust_volatility_sd = trust_volatility_sd,
           bias_volatility_mean = bias_volatility_mean,
           bias_volatility_sd = bias_volatility_sd,
-          starting_graph = class(starting_graph)[1],
-          randomSeed = .Random.seed[length(.Random.seed)]
+          starting_graph_type = class(starting_graph)[1],
+          starting_graph = starting_graph,
+          randomSeed = .Random.seed[length(.Random.seed)],
+          truth_fun = truth_fun
         )
       )
 
@@ -151,7 +156,8 @@ simulationStep <- function(model, d) {
   agents <- model$model$agents[rows, ]
 
   # Truth
-  agents$truth <- rnorm(1)  # single true value for all agents
+  # single true value for all agents
+  agents$truth <- model$parameters$truth_fun(model, d)[[1]]
 
   # Initial decisions
   agents$initial <-

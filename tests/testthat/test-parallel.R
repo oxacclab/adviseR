@@ -24,13 +24,13 @@ test_that('Simple parallel simulation', {
 
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
-  expect_identical(models[[1]]$parameters, basic.model$parameters)
+  expect_equal(models[[1]]$parameters, basic.model$parameters)
   expect_identical(models[[1]]$model$agents, basic.model$model$agents)
-  expect_identical(models[[2]]$parameters, basic.noconf.model$parameters)
+  expect_equal(models[[2]]$parameters, basic.noconf.model$parameters)
   expect_identical(models[[2]]$model$agents, basic.noconf.model$model$agents)
-  expect_identical(models[[3]]$parameters, bias.model$parameters)
+  expect_equal(models[[3]]$parameters, bias.model$parameters)
   expect_identical(models[[3]]$model$agents, bias.model$model$agents)
-  expect_identical(models[[4]]$parameters, bias.noconf.model$parameters)
+  expect_equal(models[[4]]$parameters, bias.noconf.model$parameters)
   expect_identical(models[[4]]$model$agents, bias.noconf.model$model$agents)
 })
 

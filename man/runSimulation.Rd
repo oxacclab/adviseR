@@ -16,7 +16,8 @@ runSimulation(
   bias_volatility_mean = 0.05,
   bias_volatility_sd = 0.01,
   starting_graph = NULL,
-  randomSeed = NA
+  randomSeed = NA,
+  truth_fun = function(model, d) stats::rnorm(1)
 )
 }
 \arguments{
@@ -47,6 +48,9 @@ proportion towards the final decision value from current bias at each step)}
 of starting trust weights between agents. Coerced to numeric}
 
 \item{randomSeed}{the random seed to start the simulation with}
+
+\item{truth_fun}{function taking the simulation and decision number as
+arguments and returning the true state of the world as a single number}
 }
 \value{
 a list with \itemize{

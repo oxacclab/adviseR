@@ -18,7 +18,7 @@ test_that('Simple simulation', {
   )
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
-  expect_identical(model$parameters, basic.model$parameters)
+  expect_equal(model$parameters, basic.model$parameters)
   expect_identical(model$model$agents, basic.model$model$agents)
 })
 
@@ -36,3 +36,28 @@ test_that('Sensitivity graph', {
   load('data/basic-model.rda')
   expect_equal('ggplot' %in% class(sensitivityGraph(basic.model)), T)
 })
+
+test_that('Custom truth_fun', {
+  load('data/truth_fun-model.rda')
+  model <- runSimulation(
+    n_agents = 6,
+    n_decisions = 200,
+    conf = T,
+    bias_mean = 1,
+    bias_sd = 1,
+    sensitivity_sd = 1,
+    trust_volatility_mean = .05,
+    trust_volatility_sd = .01,
+    bias_volatility_mean = 0,
+    bias_volatility_sd = 0,
+    randomSeed = floor(pi * 1e6),
+    truth_fun = function(m, d) d %% 5 - 2
+  )
+  expect_equal(model$parameters, truth_fun.model$parameters)
+  expect_identical(model$model$agents, truth_fun.model$model$agents)
+})
+
+if (F) {
+  truth_fun.model <- model
+  save(truth_fun.model, file = 'tests/testthat/data/truth_fun-model.rda')
+}

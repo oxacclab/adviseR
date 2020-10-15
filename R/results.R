@@ -57,7 +57,7 @@ settingsStr <- function(model) {
          'Agents = ', model$parameters$n_agents,
          '; Decisions = ', model$parameters$n_decisions, '; ',
          'ConfidenceWeighted = ', model$parameters$conf, '; ',
-         'Custom starting weights = ', model$parameters$starting_graph, ';\n',
+         'Custom starting trust = ', model$parameters$starting_graph_type, ';\n',
          'Sensitivity SD = ', model$parameters$sensitivity_sd, '; ',
          'Bias mean (SD) = +/-', model$parameters$bias_mean,
          ' (', model$parameters$bias_sd, '); ',
