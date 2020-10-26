@@ -185,7 +185,7 @@ simulationStep <- function(model, d) {
       ncol = model$parameters$n_agents
     )
   } else {
-    probabilities <- model$model$graphs[[d]] * w
+    probabilities <- model$model$graphs[[d]] ^ w
   }
   # never ask yourself - set diag to just below minimum value
   # this approach supports negative values of w without self-seeking
