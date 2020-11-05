@@ -99,8 +99,8 @@ makeAgents <- function(
       } else {
         confSlope <- rnorm(
           nrow(agents),
-          asymptotic_confidence[0],
-          asymptotic_confidence[1]
+          asymptotic_confidence[1],
+          asymptotic_confidence[2]
         )
       }
       agents$confSlope = abs(confSlope)

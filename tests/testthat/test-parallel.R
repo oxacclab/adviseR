@@ -36,10 +36,12 @@ test_that('Simple parallel simulation', {
 })
 
 if (F) {
-  basic.model <- models[[1]]
-  basic.noconf.model <- models[[2]]
-  bias.model <- models[[3]]
-  bias.noconf.model <- models[[4]]
+  # Do this individually because parallel processing can't be trusted not to
+  # use cached versions of the package
+  basic.model <- do.call(runSimulation, as.list(params[1, ]))
+  basic.noconf.model <- do.call(runSimulation, as.list(params[2, ]))
+  bias.model <- do.call(runSimulation, as.list(params[3, ]))
+  bias.noconf.model <- do.call(runSimulation, as.list(params[4, ]))
   save(basic.model, file = 'tests/testthat/data/basic-model.rda')
   save(basic.noconf.model, file = 'tests/testthat/data/basic-noconf-model.rda')
   save(bias.model, file = 'tests/testthat/data/bias-model.rda')
