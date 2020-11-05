@@ -64,6 +64,11 @@ runSimulation <- function(
   asymptotic_confidence = c(0,1)
 ) {
 
+  # Compensate for parallel:: coercing logical to numeric
+  if (length(asymptotic_confidence) == 1 &
+      typeof(asymptotic_confidence) != 'closure')
+    asymptotic_confidence <- as.logical(asymptotic_confidence)
+
   # print(paste0(
   #   "Running simulation: ",
   #   "; AgentCount = ", n_agents,
