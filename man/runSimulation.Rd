@@ -18,7 +18,8 @@ runSimulation(
   starting_graph = NULL,
   randomSeed = NA,
   truth_fun = function(model, d) stats::rnorm(1),
-  weighted_sampling = NA
+  weighted_sampling = NA,
+  asymptotic_confidence = c(0, 1)
 )
 }
 \arguments{
@@ -59,6 +60,15 @@ weights are multiplied by this value (so values > 1 make source selection
 more pronounced than advice weighting, and values < 1 make source selection
 less pronounced than advice weighting). Negative values will make agents
 actively seek out those they do not trust for advice.}
+
+\item{asymptotic_confidence}{whether to constrain confidence in decision to
+be between 0 (certain left) and 1 (certain right), as determined by a
+sigmoid function. If this is a length 2 vector it contains the mean and SD
+of the distribution from which agent sigmoid slopes are drawn. If this is
+a function, it is called with the agents' details and should return the
+slopes as a vector. \code{\link{abs}} is used to avoid negative slopes.
+If this is FALSE, decision confidence is simply the agent's estimate of the
+state of the world.}
 }
 \value{
 a list with \itemize{

@@ -14,7 +14,8 @@ test_that('Simple simulation', {
     trust_volatility_sd = .01,
     bias_volatility_mean = 0,
     bias_volatility_sd = 0,
-    randomSeed = floor(pi * 1e6)
+    randomSeed = floor(pi * 1e6),
+    asymptotic_confidence = F
   )
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)

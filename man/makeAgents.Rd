@@ -16,7 +16,8 @@ makeAgents(
   trust_volatility_sd = 0.01,
   bias_volatility_mean = 0.05,
   bias_volatility_sd = 0.01,
-  starting_graph = NULL
+  starting_graph = NULL,
+  asymptotic_confidence = c(0, 1)
 )
 }
 \arguments{
@@ -43,6 +44,10 @@ proportion towards the final decision value from current bias at each step)}
 
 \item{starting_graph}{single number, vector, or n_agents-by-n_agents matrix
 of starting trust weights between agents. Coerced to numeric}
+
+\item{asymptotic_confidence}{mean and SD of asymptotic confidence slopes for
+sigmoid function, function to generate slopes given agent details, or F to
+leave out confidence translation columns}
 }
 \value{
 \code{list(
