@@ -23,6 +23,14 @@
 #'   more pronounced than advice weighting, and values < 1 make source selection
 #'   less pronounced than advice weighting). Negative values will make agents
 #'   actively seek out those they do not trust for advice.
+#' @param asymptotic_confidence whether to constrain confidence in decision to
+#'   be between 0 (certain left) and 1 (certain right), as determined by a
+#'   sigmoid function. If this is a length 2 vector it contains the mean and SD
+#'   of the distribution from which agent sigmoid slopes are drawn. If this is
+#'   a function, it is called with the agents' details and should return the
+#'   slopes as a vector. \code{\link{abs}} is used to avoid negative slopes.
+#'   If this is FALSE, decision confidence is simply the agent's estimate of the
+#'   state of the world.
 #'
 #' @return a list with \itemize{
 #'  \item{"times"}{Timestamps associated with simulation stages.}
@@ -52,7 +60,8 @@ runSimulation <- function(
   starting_graph = NULL,
   randomSeed = NA,
   truth_fun = function(model, d) stats::rnorm(1),
-  weighted_sampling = NA
+  weighted_sampling = NA,
+  asymptotic_confidence = c(0,1)
 ) {
 
   # print(paste0(
@@ -93,7 +102,8 @@ runSimulation <- function(
           starting_graph = starting_graph,
           randomSeed = .Random.seed[length(.Random.seed)],
           truth_fun = truth_fun,
-          weighted_sampling = weighted_sampling
+          weighted_sampling = weighted_sampling,
+          asymptotic_confidence = asymptotic_confidence
         )
       )
 
@@ -108,7 +118,8 @@ runSimulation <- function(
         trust_volatility_sd = trust_volatility_sd,
         bias_volatility_mean = bias_volatility_mean,
         bias_volatility_sd = bias_volatility_sd,
-        starting_graph = starting_graph
+        starting_graph = starting_graph,
+        asymptotic_confidence = asymptotic_confidence
       )
 
       out$times$agentsCreated <- Sys.time()
@@ -125,7 +136,9 @@ runSimulation <- function(
 }
 
 #' Run a suite of simulations defined by params
-#' @param params dataframe of parameters for simulations (see \code{runSimulation()} for details)
+#' @param params dataframe of parameters for simulations
+#'   (see \code{\link{runSimulation}} for details). Can also be a list of lists
+#'   to support custom function arguments
 #' @param cores number of cores to use in the cluster
 #' @inheritDotParams parallel::makeCluster
 #'
@@ -133,11 +146,18 @@ runSimulation <- function(
 #'
 #' @export
 runSimulations <- function(params, cores = parallel::detectCores(), ...) {
-  cl <- parallel::makeCluster(cores, ...)
-  out <- parallel::parApply(cl, params, 1, function(p) {
+  # Unpack arguments and call runSimulation
+  f <- function(p) {
     library(adviseR)
     do.call(runSimulation, as.list(p))
-  })
+  }
+
+  cl <- parallel::makeCluster(cores, ...)
+  if ('data.frame' %in% class(params)) {
+    out <- parallel::parApply(cl, params, 1, f)
+  } else {
+    out <- parallel::parLapply(cl, params, f)
+  }
   parallel::stopCluster(cl)
   out
 }
@@ -153,6 +173,7 @@ runSimulations <- function(params, cores = parallel::detectCores(), ...) {
 #' @param d decision to simulate
 #'
 #' @importFrom stats rnorm
+#' @importFrom utils hasName
 #'
 #' @return model updated to include values for decision d
 simulationStep <- function(model, d) {
@@ -173,6 +194,9 @@ simulationStep <- function(model, d) {
     agents$bias +     # bias
     # normally distributed noise with sd = 1/sensitivity
     rnorm(model$parameters$n_agents, 0, 1/agents$sensitivity)
+
+  if (hasName(agents, 'initialConfidence'))
+    agents$initialConfidence <- sigmoid(agents$initial, agents$confSlope)
 
   # Advice
 
@@ -200,11 +224,17 @@ simulationStep <- function(model, d) {
 
   agents$weight <- diag(model$model$graphs[[d]][agents$advisor, ])
 
-  agents$advice <- agents$initial[agents$advisor]
-
-  agents$final <-
-    (agents$initial * (1 - agents$weight)) +
-    (agents$advice * agents$weight)
+  if (hasName(agents, 'initialConfidence')) {
+    agents$advice <- agents$initialConfidence[agents$advisor]
+    agents$finalConfidence <- (agents$initialConfidence * (1 - agents$weight)) +
+      (agents$advice * agents$weight)
+    agents$final <- sigmoid.inv(agents$finalConfidence)
+  } else {
+    agents$advice <- agents$initial[agents$advisor]
+    agents$final <-
+      (agents$initial * (1 - agents$weight)) +
+      (agents$advice * agents$weight)
+  }
 
   # Write output to the model
   model$model$agents[rows, ] <- agents
@@ -220,11 +250,13 @@ simulationStep <- function(model, d) {
   # Updating weights
   newWeights <- as.vector(model$model$graphs[[d]])
   if (model$parameters$conf) {
+    initial <- if (hasName(agents, 'initialConfidence'))
+      agents$initialConfidence else agents$initial
     newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] <-
       newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] +
       ifelse((agents$initial > 0) == (agents$advice > 0),
-             agents$trust_volatility * abs(agents$initial), # agree
-             -agents$trust_volatility * abs(agents$initial)) # disagree
+             agents$trust_volatility * abs(initial), # agree
+             -agents$trust_volatility * abs(initial)) # disagree
   } else {
     newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] <-
       newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] +
@@ -232,7 +264,11 @@ simulationStep <- function(model, d) {
              agents$trust_volatility, -agents$trust_volatility)
   }
   newWeights <- pmax(0.0001, pmin(1, newWeights))
-  newWeights <- matrix(newWeights, model$parameters$n_agents, model$parameters$n_agents)
+  newWeights <- matrix(
+    newWeights,
+    model$parameters$n_agents,
+    model$parameters$n_agents
+  )
   diag(newWeights) <- 0
   model$model$graphs[[d + 1]] <- newWeights
 

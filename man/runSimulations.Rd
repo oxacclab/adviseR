@@ -7,7 +7,9 @@
 runSimulations(params, cores = parallel::detectCores(), ...)
 }
 \arguments{
-\item{params}{dataframe of parameters for simulations (see \code{runSimulation()} for details)}
+\item{params}{dataframe of parameters for simulations
+(see \code{\link{runSimulation}} for details). Can also be a list of lists
+to support custom function arguments}
 
 \item{cores}{number of cores to use in the cluster}
 

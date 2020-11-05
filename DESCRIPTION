@@ -25,4 +25,5 @@ Imports:
     igraph,
     stats,
     graphics,
-    withr
+    withr,
+    utils

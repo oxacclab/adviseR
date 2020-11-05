@@ -15,6 +15,9 @@
 #' @param bias_volatility_sd standard deviation
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
 #'   of starting trust weights between agents. Coerced to numeric
+#' @param asymptotic_confidence mean and SD of asymptotic confidence slopes for
+#'   sigmoid function, function to generate slopes given agent details, or F to
+#'   leave out confidence translation columns
 #'
 #' @details the \code{agents} tibble is an n_agents*n_decisions by 12 table with
 #' \itemize{
@@ -49,7 +52,8 @@ makeAgents <- function(
   trust_volatility_sd = .01,
   bias_volatility_mean = .05,
   bias_volatility_sd = .01,
-  starting_graph = NULL
+  starting_graph = NULL,
+  asymptotic_confidence = c(0,1)
 ) {
   bias <- ifelse(runif(n_agents) > .5,
                  rnorm(n_agents, bias_mean, bias_sd),
@@ -82,6 +86,29 @@ makeAgents <- function(
     agents,
     across(ends_with('volatility'), ~ abs(.))
   )
+
+  if (!identical(asymptotic_confidence, F)) {
+    tryCatch({
+      agents <- mutate(
+        agents,
+        initialConfidence = NA_real_,
+        finalConfidence = NA_real_
+      )
+      if (typeof(asymptotic_confidence) == 'closure') {
+        confSlope <- asymptotic_confidence(agents)
+      } else {
+        confSlope <- rnorm(
+          nrow(agents),
+          asymptotic_confidence[0],
+          asymptotic_confidence[1]
+        )
+      }
+      agents$confSlope = abs(confSlope)
+    },
+    error = function(e) stop(
+      paste0('Error while assigning asymptotic_confidence columns:\n', e)
+    ))
+  }
 
   if (!is.null(starting_graph)) {
     if (length(starting_graph) == 1) {
