@@ -4,12 +4,17 @@
 \alias{sigmoid}
 \title{Sigmoid function}
 \usage{
-sigmoid(x, slope = 1)
+sigmoid(x, slope = 1, nudge = 1e-08)
 }
 \arguments{
 \item{x}{value}
 
 \item{slope}{slope steepness parameter}
+
+\item{nudge}{adjustments applied if p is very close to 0 or 1}
+}
+\value{
+probability of selecting positive over negative direction given x
 }
 \description{
 Sigmoid function

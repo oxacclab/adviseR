@@ -98,12 +98,12 @@ makeAgents <- function(
         confSlope <- asymptotic_confidence(agents)
       } else {
         confSlope <- rnorm(
-          nrow(agents),
+          n_agents,
           asymptotic_confidence[1],
           asymptotic_confidence[2]
         )
       }
-      agents$confSlope = abs(confSlope)
+      agents$confSlope = rep(abs(confSlope), n_decisions)
     },
     error = function(e) stop(
       paste0('Error while assigning asymptotic_confidence columns:\n', e)

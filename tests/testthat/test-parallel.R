@@ -21,7 +21,7 @@ test_that('Simple parallel simulation', {
     randomSeed = floor(pi * 1e6),
     asymptotic_confidence = F
   )
-  models <- runSimulations(params, cores = 2)
+  models <- runSimulations(params, cores = 2, outfile = paste0(tempfile(), '.log'))
 
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)

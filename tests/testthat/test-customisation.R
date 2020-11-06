@@ -78,7 +78,7 @@ test_that('Simple parallel simulation', {
       bias_volatility_mean = 0,
       bias_volatility_sd = .01,
       randomSeed = floor(pi * 1e6),
-      asymptotic_confidence = function(x) rnorm(nrow(x))
+      asymptotic_confidence = function(x) rnorm(length(unique(x$id)))
     )
   )
   models <- runSimulations(params, cores = 2)
