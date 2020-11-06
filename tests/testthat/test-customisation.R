@@ -48,7 +48,7 @@ test_that('Weighted sampling', {
   expect_lt(counts[2], counts[3])
 })
 
-test_that('Simple parallel simulation', {
+test_that('Asymptotic confidence simulation', {
   load('data/asymp-model.rda')
 
   params <- list(
@@ -85,8 +85,8 @@ test_that('Simple parallel simulation', {
 
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
-  expect_identical(models[[1]]$model$agents, asymp.model$model$agents)
-  expect_identical(models[[2]]$model$agents, asymp.model$model$agents)
+  expect_equal(models[[1]]$model$agents, asymp.model$model$agents)
+  expect_equal(models[[2]]$model$agents, asymp.model$model$agents)
 })
 
 if (F) {
