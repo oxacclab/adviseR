@@ -89,9 +89,36 @@ test_that('Asymptotic confidence simulation', {
   expect_equal(models[[2]]$model$agents, asymp.model$model$agents)
 })
 
+test_that('Example thesis simulation', {
+  load('data/thesis-model.rda')
+
+  m <- runSimulation(
+    n_agents = 20,
+    n_decisions = 500,
+    conf = T,
+    bias_mean = 1,
+    bias_sd = 1,
+    sensitivity_sd = 1,
+    trust_volatility_mean = .05,
+    trust_volatility_sd = .01,
+    bias_volatility_mean = 0,
+    bias_volatility_sd = 0,
+    starting_graph = .1,
+    randomSeed = 20201014
+  )
+
+  # Can't do a simple identical check because $timings will be different,
+  # and $graphs have different ids (presumably to avoid conflicts)
+  expect_equal(m$model$agents, thesis.model$model$agents)
+})
+
 if (F) {
   truth_fun.model <- model
   save(truth_fun.model, file = 'tests/testthat/data/truth_fun-model.rda')
   asymp.model <- models[[1]]
   save(asymp.model, file = 'tests/testthat/data/asymp-model.rda')
+  thesis.model <- m
+  save(thesis.model, file = 'tests/testthat/data/thesis-model.rda')
+
+  # Visualise to check nothi
 }

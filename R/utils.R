@@ -7,7 +7,8 @@
 #' @return probability of selecting positive over negative direction given x
 sigmoid <- function(x, slope = 1, nudge = 1e-8) {
   y <- 1/(1 + exp(-x * slope))
-  y[y == round(y)] <- ifelse(y == 0, y + nudge, y - nudge)
+  m <- y == round(y)
+  y[m] <- ifelse(y[m] == 0, y[m] + nudge, y[m] - nudge)
   y
 }
 
