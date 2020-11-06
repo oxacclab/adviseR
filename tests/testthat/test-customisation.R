@@ -95,7 +95,7 @@ test_that('Example thesis simulation', {
   m <- runSimulation(
     n_agents = 20,
     n_decisions = 500,
-    conf = T,
+    conf = F,
     bias_mean = 1,
     bias_sd = 1,
     sensitivity_sd = 1,
