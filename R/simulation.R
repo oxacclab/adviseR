@@ -255,15 +255,17 @@ simulationStep <- function(model, d) {
   # Updating weights
   if (hasName(agents, 'initialConfidence')) {
     initial <- agents$initialConfidence - .5
+    agree <- (agents$initialConfidence > .5) == (agents$advice > .5)
   } else {
     initial <- agents$initial
+    agree <- (initial > 0) == (agents$advice > 0)
   }
   newWeights <- as.vector(model$model$graphs[[d]])
   if (model$parameters$conf) {
     newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] <-
       newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] +
       ifelse(
-        (initial > 0) == (agents$advice > 0),
+        agree,
         agents$trust_volatility * abs(initial), # agree
         -agents$trust_volatility * abs(initial) # disagree
       )
@@ -271,7 +273,7 @@ simulationStep <- function(model, d) {
     newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] <-
       newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] +
       ifelse(
-        (initial > 0) == (agents$advice > 0),
+        agree,
         agents$trust_volatility,
         -agents$trust_volatility
       )
