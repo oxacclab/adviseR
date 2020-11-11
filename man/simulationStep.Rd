@@ -4,11 +4,17 @@
 \alias{simulationStep}
 \title{Each timestep agents are asked for a binary decision about whether a variable
 is > 0. They form a noisy initial decision based on the true value plus their
-bias plus noise. They then give their opinion to another agent, and receive
-another agent's opinion as advice. The advice is integrated according to the
-current weight placed on the other agent's trustworthiness. This weight is
-then updated according to whether the agents agree, weighted by the
-confidence of the deciding agent.}
+noise based on their sensitivity. This decision is coded as 0 (v < 0) or 1 (
+v > 0).
+They then weight this evidence by their bias (prior probability of 0 vs 1).
+They then give their opinion to another agent as a binary endorsement (0 or
+1), and receive another agent's opinion as advice.
+The advice is integrated according to the current weight placed on the other
+agent's trustworthiness. This weight is then updated according to the
+agent's trust in their advisor.
+The bias is updated depending on the final decision.
+The weight in the advisor is updated depending upon the plausibility of the
+advice given the initial estimate.}
 \usage{
 simulationStep(model, d)
 }
@@ -23,9 +29,15 @@ model updated to include values for decision d
 \description{
 Each timestep agents are asked for a binary decision about whether a variable
 is > 0. They form a noisy initial decision based on the true value plus their
-bias plus noise. They then give their opinion to another agent, and receive
-another agent's opinion as advice. The advice is integrated according to the
-current weight placed on the other agent's trustworthiness. This weight is
-then updated according to whether the agents agree, weighted by the
-confidence of the deciding agent.
+noise based on their sensitivity. This decision is coded as 0 (v < 0) or 1 (
+v > 0).
+They then weight this evidence by their bias (prior probability of 0 vs 1).
+They then give their opinion to another agent as a binary endorsement (0 or
+1), and receive another agent's opinion as advice.
+The advice is integrated according to the current weight placed on the other
+agent's trustworthiness. This weight is then updated according to the
+agent's trust in their advisor.
+The bias is updated depending on the final decision.
+The weight in the advisor is updated depending upon the plausibility of the
+advice given the initial estimate.
 }

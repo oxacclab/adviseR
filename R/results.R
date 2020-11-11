@@ -32,15 +32,15 @@ detailGraphs <- function(model) {
     # Bias difference
     E(g[[i]])$headBias <- agents$bias[head_of(g[[i]], E(g[[i]]))]
     E(g[[i]])$tailBias <- agents$bias[tail_of(g[[i]], E(g[[i]]))]
-    E(g[[i]])$sharedBias <- abs(E(g[[i]])$headBias) +
-      abs(E(g[[i]])$tailBias) *
-      ifelse((E(g[[i]])$headBias < 0) == (E(g[[i]])$tailBias < 0), 1, -1)
+    E(g[[i]])$biasSimilarity <- 1 - abs(E(g[[i]])$headBias - E(g[[i]])$tailBias)
 
     # colour vertices by bias
     V(g[[i]])$bias <- agents$bias[rows]
-    V(g[[i]])$biasColour <- ifelse(agents$bias[rows] > 0,
-                                   biasToColourString(agents$bias[rows], 'b'),
-                                   biasToColourString(agents$bias[rows], 'r'))
+    V(g[[i]])$biasColour <- ifelse(
+      agents$bias[rows] > .5,
+      biasToColourString(agents$bias[rows], 'b'),
+      biasToColourString(agents$bias[rows], 'r')
+    )
   }
 
   model$model$graphs <- g
@@ -115,11 +115,10 @@ biasToColourString <- function(b, colour = c('r', 'g', 'b'),
   out <- rep('#', length(b))
 
   for (clr in c('r', 'g', 'b')) {
-
-    if (clr == colour) {
-      out <- paste0(out, 'FF')
-    } else {
+    if (clr %in% colour) {
       out <- paste0(out, x)
+    } else {
+      out <- paste0(out, 'FF')
     }
   }
 
@@ -197,7 +196,7 @@ networkGraph <- function(model, ...) {
   for (d in 1:model$parameters$n_decisions) {
     tmp <- model$model$graphs[[d]]
 
-    test <- cor.test(as.numeric(tmp[attr = 'sharedBias']),
+    test <- cor.test(as.numeric(tmp[attr = 'biasSimilarity']),
                      as.numeric(tmp[attr = 'weight']))
 
     cors <- rbind(cors, tibble(decision = d,

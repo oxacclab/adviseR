@@ -4,7 +4,9 @@
 #' @param n_agents number of agents to create
 #' @param n_decisions number of decisions
 #' @param bias_mean the mean for the agents' bias distribution (agents' biases
-#'   are drawn from normal distributions with mean +/- biasMean)
+#'   are drawn from normal distributions with mean +/- biasMean). Translated via
+#'   sigmoid function to between 0 and 1, and represents the prior probability
+#'   that the answer is 1.
 #' @param bias_sd standard deviation for the bias distribution
 #' @param sensitivity_sd standard deviation for distribution of agents'
 #'   sensitivity (mean is 1)
@@ -13,11 +15,12 @@
 #' @param bias_volatility_mean the mean volatility of agents' biases (move this
 #'   proportion towards the final decision value from current bias at each step)
 #' @param bias_volatility_sd standard deviation
+#' @param confidence_slope_mean the mean of the distribution from which agents
+#'   take their slopes for the sigmoid function mapping continuous evidence to
+#'   a probability of a categorical decision.
+#' @param confidence_slope_sd standard deviation
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
 #'   of starting trust weights between agents. Coerced to numeric
-#' @param asymptotic_confidence mean and SD of asymptotic confidence slopes for
-#'   sigmoid function, function to generate slopes given agent details, or F to
-#'   leave out confidence translation columns
 #'
 #' @details the \code{agents} tibble is an n_agents*n_decisions by 12 table with
 #' \itemize{
@@ -45,19 +48,18 @@
 makeAgents <- function(
   n_agents = n_agents,
   n_decisions = n_decisions,
-  bias_mean = 1,
+  bias_mean = 0,
   bias_sd = 1,
   sensitivity_sd = 1,
   trust_volatility_mean = .05,
   trust_volatility_sd = .01,
   bias_volatility_mean = .05,
   bias_volatility_sd = .01,
-  starting_graph = NULL,
-  asymptotic_confidence = c(0,1)
+  confidence_slope_mean = 1,
+  confidence_slope_sd = 0,
+  starting_graph = NULL
 ) {
-  bias <- ifelse(runif(n_agents) > .5,
-                 rnorm(n_agents, bias_mean, bias_sd),
-                 rnorm(n_agents, -bias_mean, bias_sd))
+  bias <- sigmoid(rnorm(n_agents, bias_mean, bias_sd))
 
   agents <- tibble(
     id = rep(1:n_agents, n_decisions),
@@ -76,39 +78,21 @@ makeAgents <- function(
     ),
     bias = rep(bias[order(bias)], n_decisions),
     truth = NA_real_,
+    percept = NA_real_,
     initial = NA_real_,
     advisor = NA_integer_,
     advice = NA_real_,
     weight = NA_real_,
-    final = NA_real_
+    final = NA_real_,
+    confidence_slope = rep(
+      rnorm(n_agents, confidence_slope_mean, confidence_slope_sd),
+      n_decisions
+    )
   )
   agents <- mutate(
     agents,
-    across(ends_with('volatility'), ~ abs(.))
+    across(c(ends_with('volatility'), "confidence_slope"), ~ abs(.)),
   )
-
-  if (!identical(asymptotic_confidence, F)) {
-    tryCatch({
-      agents <- mutate(
-        agents,
-        initialConfidence = NA_real_,
-        finalConfidence = NA_real_
-      )
-      if (typeof(asymptotic_confidence) == 'closure') {
-        confSlope <- asymptotic_confidence(agents)
-      } else {
-        confSlope <- rnorm(
-          n_agents,
-          asymptotic_confidence[1],
-          asymptotic_confidence[2]
-        )
-      }
-      agents$confSlope = rep(abs(confSlope), n_decisions)
-    },
-    error = function(e) stop(
-      paste0('Error while assigning asymptotic_confidence columns:\n', e)
-    ))
-  }
 
   if (!is.null(starting_graph)) {
     if (length(starting_graph) == 1) {

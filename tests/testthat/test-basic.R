@@ -2,25 +2,12 @@ context('Basic functionality')
 library(adviseR)
 
 test_that('Simple simulation', {
-  load('data/basic-model.rda')
-  model <- runSimulation(
-    n_agents = 6,
-    n_decisions = 200,
-    conf = T,
-    bias_mean = 1,
-    bias_sd = 1,
-    sensitivity_sd = 1,
-    trust_volatility_mean = .05,
-    trust_volatility_sd = .01,
-    bias_volatility_mean = 0,
-    bias_volatility_sd = 0,
-    randomSeed = floor(pi * 1e6),
-    asymptotic_confidence = F
-  )
+  load('data/bias-model.rda')
+  model <- runSimulation(randomSeed = floor(pi * 1e6))
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
-  expect_equal(model$parameters, basic.model$parameters)
-  expect_identical(model$model$agents, basic.model$model$agents)
+  expect_equal(model$parameters, bias.model$parameters)
+  expect_identical(model$model$agents, bias.model$model$agents)
 })
 
 test_that('Simulation network graphs', {

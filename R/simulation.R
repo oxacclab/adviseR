@@ -1,9 +1,9 @@
 #' Run the simulation
 #' @param n_agents number of nodes in the network
 #' @param n_decisions number of decisions to simulate
-#' @param conf whether or not agents use confidence to update trust
 #' @param bias_mean the mean for the agents' bias distribution (agents' biases
-#'   are drawn from normal distributions with mean +/- biasMean)
+#'   are drawn from normal distributions with mean +/- biasMean). Capped to
+#'   between 0 and 1, and represents the prior probability that the answer is 1.
 #' @param bias_sd standard deviation for the bias distribution
 #' @param sensitivity_sd standard deviation for distribution of agents'
 #'   sensitivity (mean is 1)
@@ -12,25 +12,24 @@
 #' @param bias_volatility_mean the mean volatility of agents' biases (move this
 #'   proportion towards the final decision value from current bias at each step)
 #' @param bias_volatility_sd standard deviation
+#' @param confidence_slope_mean the mean of the distribution from which agents
+#'   take their slopes for the sigmoid function mapping continuous evidence to
+#'   a probability of a categorical decision. \code{\link{abs}} is used to
+#'   avoid negative slopes.
+#' @param confidence_slope_sd standard deviation
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
 #'   of starting trust weights between agents. Coerced to numeric
 #' @param randomSeed the random seed to start the simulation with
 #' @param truth_fun function taking the simulation and decision number as
 #'   arguments and returning the true state of the world as a single number
+#' @param truth_sd standard deviation of the truth function that the agents use
+#'   to calculate the probability of values given their biases.
 #' @param weighted_sampling a non-zero/NA value means agents choose who to seek
 #'   advice from according to how likely they are to trust the advice. The
 #'   weights are multiplied by this value (so values > 1 make source selection
 #'   more pronounced than advice weighting, and values < 1 make source selection
 #'   less pronounced than advice weighting). Negative values will make agents
 #'   actively seek out those they do not trust for advice.
-#' @param asymptotic_confidence whether to constrain confidence in decision to
-#'   be between 0 (certain left) and 1 (certain right), as determined by a
-#'   sigmoid function. If this is a length 2 vector it contains the mean and SD
-#'   of the distribution from which agent sigmoid slopes are drawn. If this is
-#'   a function, it is called with the agents' details and should return the
-#'   slopes as a vector. \code{\link{abs}} is used to avoid negative slopes.
-#'   If this is FALSE, decision confidence is simply the agent's estimate of the
-#'   state of the world.
 #'
 #' @return a list with \itemize{
 #'  \item{"times"}{Timestamps associated with simulation stages.}
@@ -49,38 +48,21 @@
 runSimulation <- function(
   n_agents = 6,
   n_decisions = 200,
-  conf = T,
-  bias_mean = 1,
+  bias_mean = 0,
   bias_sd = 1,
   sensitivity_sd = 1,
   trust_volatility_mean = .05,
   trust_volatility_sd = .01,
   bias_volatility_mean = .05,
   bias_volatility_sd = .01,
+  confidence_slope_mean = 1,
+  confidence_slope_sd = 0,
   starting_graph = NULL,
   randomSeed = NA,
-  truth_fun = function(model, d) stats::rnorm(1),
-  weighted_sampling = NA,
-  asymptotic_confidence = c(0,1)
+  truth_fun = function(model, d) stats::rnorm(1, 0, model$parameters$truth_sd),
+  truth_sd = .5,
+  weighted_sampling = NA
 ) {
-
-  # Compensate for parallel:: coercing logical to numeric
-  if (length(asymptotic_confidence) == 1 &
-      typeof(asymptotic_confidence) != 'closure')
-    asymptotic_confidence <- as.logical(asymptotic_confidence)
-
-  # print(paste0(
-  #   "Running simulation: ",
-  #   "; AgentCount = ", n_agents,
-  #   "; DecisionCount = ", n_decisions,
-  #   "; BiasMean = ", bias_mean,
-  #   " (SD = ", bias_sd, ")",
-  #   "; sensitivitySD = ", sensitivity_sd,
-  #   "; TrustVolatility = ", trust_volatility_mean,
-  #   " (SD = ", trust_volatility_sd, ")",
-  #   "; BiasVolatility = ", bias_volatility_mean,
-  #   " (SD = ", bias_volatility_sd, ")",
-  # ))
 
   if (is.na(randomSeed))
     randomSeed = round(runif(1, 1e6, 1e8))  # random random seed
@@ -95,7 +77,6 @@ runSimulation <- function(
         parameters = list(
           n_agents = n_agents,
           n_decisions = n_decisions,
-          conf = as.logical(conf),
           bias_mean = bias_mean,
           bias_sd = bias_sd,
           sensitivity_sd = sensitivity_sd,
@@ -103,12 +84,14 @@ runSimulation <- function(
           trust_volatility_sd = trust_volatility_sd,
           bias_volatility_mean = bias_volatility_mean,
           bias_volatility_sd = bias_volatility_sd,
+          confidence_slope_mean = confidence_slope_mean,
+          confidence_slope_sd = confidence_slope_sd,
           starting_graph_type = class(starting_graph)[1],
           starting_graph = starting_graph,
           randomSeed = .Random.seed[length(.Random.seed)],
           truth_fun = truth_fun,
-          weighted_sampling = weighted_sampling,
-          asymptotic_confidence = asymptotic_confidence
+          truth_sd = truth_sd,
+          weighted_sampling = weighted_sampling
         )
       )
 
@@ -123,8 +106,9 @@ runSimulation <- function(
         trust_volatility_sd = trust_volatility_sd,
         bias_volatility_mean = bias_volatility_mean,
         bias_volatility_sd = bias_volatility_sd,
-        starting_graph = starting_graph,
-        asymptotic_confidence = asymptotic_confidence
+        confidence_slope_mean = confidence_slope_mean,
+        confidence_slope_sd = confidence_slope_sd,
+        starting_graph = starting_graph
       )
 
       out$times$agentsCreated <- Sys.time()
@@ -169,11 +153,17 @@ runSimulations <- function(params, cores = parallel::detectCores(), ...) {
 
 #' Each timestep agents are asked for a binary decision about whether a variable
 #' is > 0. They form a noisy initial decision based on the true value plus their
-#' bias plus noise. They then give their opinion to another agent, and receive
-#' another agent's opinion as advice. The advice is integrated according to the
-#' current weight placed on the other agent's trustworthiness. This weight is
-#' then updated according to whether the agents agree, weighted by the
-#' confidence of the deciding agent.
+#' noise based on their sensitivity. This decision is coded as 0 (v < 0) or 1 (
+#' v > 0).
+#' They then weight this evidence by their bias (prior probability of 0 vs 1).
+#' They then give their opinion to another agent as a binary endorsement (0 or
+#' 1), and receive another agent's opinion as advice.
+#' The advice is integrated according to the current weight placed on the other
+#' agent's trustworthiness. This weight is then updated according to the
+#' agent's trust in their advisor.
+#' The bias is updated depending on the final decision.
+#' The weight in the advisor is updated depending upon the plausibility of the
+#' advice given the initial estimate.
 #' @param model to simulate the step for
 #' @param d decision to simulate
 #'
@@ -194,52 +184,22 @@ simulationStep <- function(model, d) {
   agents$truth <- model$parameters$truth_fun(model, d)[[1]]
 
   # Initial decisions
-  agents$initial <-
-    agents$truth +    # true value
-    agents$bias +     # bias
-    # normally distributed noise with sd = 1/sensitivity
-    rnorm(model$parameters$n_agents, 0, 1/agents$sensitivity)
+  agents$percept <- getPercept(agents)
 
-  if (hasName(agents, 'initialConfidence'))
-    agents$initialConfidence <- sigmoid(agents$initial, agents$confSlope)
+  # Initial confidence
+  agents$initial <- getConfidence(agents, model$parameters$truth_sd)
+
+  # Select advisor
+  agents$advisor <-
+    selectAdvisor(model$model$graphs[[d]], model$parameters$weighted_sampling)
+
+  agents$weight <- diag(model$model$graphs[[d]][, agents$advisor])
 
   # Advice
+  agents$advice <- round(agents$initial[agents$advisor]) # advice is 0 or 1
 
-  # pick an advisor
-  w <- model$parameters$weighted_sampling
-  if (is.na(w) || w == 0) {
-    probabilities <- matrix(
-      1,
-      nrow = model$parameters$n_agents,
-      ncol = model$parameters$n_agents
-    )
-  } else {
-    probabilities <- model$model$graphs[[d]] ^ w
-  }
-  # never ask yourself - set diag to just below minimum value
-  # this approach supports negative values of w without self-seeking
-  diag(probabilities) <- apply(probabilities, 1, min) - .0001
-  agents$advisor <- sapply(agents$id, function(i)
-    base::sample(
-      col(probabilities)[i, ], # ids are column numbers
-      size = 1,
-      prob = probabilities[i, ] - min(probabilities[i, ]) # self prob to zero
-    )
-  )
-
-  agents$weight <- diag(model$model$graphs[[d]][agents$advisor, ])
-
-  if (hasName(agents, 'initialConfidence')) {
-    agents$advice <- agents$initialConfidence[agents$advisor]
-    agents$finalConfidence <- (agents$initialConfidence * (1 - agents$weight)) +
-      (agents$advice * agents$weight)
-    agents$final <- sigmoid.inv(agents$finalConfidence)
-  } else {
-    agents$advice <- agents$initial[agents$advisor]
-    agents$final <-
-      (agents$initial * (1 - agents$weight)) +
-      (agents$advice * agents$weight)
-  }
+  # Final decision
+  agents$final <- weighted(agents$advice, agents$initial, agents$weight)
 
   # Write output to the model
   model$model$agents[rows, ] <- agents
@@ -248,44 +208,109 @@ simulationStep <- function(model, d) {
   if (max(rows) != nrow(model$model$agents)) {
     # Nudge bias towards observed (i.e. based on final decision) truth
     model$model$agents[rows + model$parameters$n_agents, "bias"] <-
-      agents$bias * (1 - agents$bias_volatility) +
-      agents$final * agents$bias_volatility
+      weighted(agents$final, agents$bias, agents$bias_volatility)
   }
 
   # Updating weights
-  if (hasName(agents, 'initialConfidence')) {
-    initial <- agents$initialConfidence - .5
-    agree <- (agents$initialConfidence > .5) == (agents$advice > .5)
-  } else {
-    initial <- agents$initial
-    agree <- (initial > 0) == (agents$advice > 0)
-  }
-  newWeights <- as.vector(model$model$graphs[[d]])
-  if (model$parameters$conf) {
-    newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] <-
-      newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] +
-      ifelse(
-        agree,
-        agents$trust_volatility * abs(initial), # agree
-        -agents$trust_volatility * abs(initial) # disagree
-      )
-  } else {
-    newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] <-
-      newWeights[(agents$id - 1) * model$parameters$n_agents + agents$advisor] +
-      ifelse(
-        agree,
-        agents$trust_volatility,
-        -agents$trust_volatility
-      )
-  }
-  newWeights <- pmax(0.0001, pmin(1, newWeights))
-  newWeights <- matrix(
-    newWeights,
-    model$parameters$n_agents,
-    model$parameters$n_agents
-  )
-  diag(newWeights) <- 0
-  model$model$graphs[[d + 1]] <- newWeights
+  model$model$graphs[[d + 1]] <-
+    newWeights(agents, model$model$graphs[[d]], model$parameters$truth_sd)
 
   model
+}
+
+#' Return the percept of the \code{agents} given some truth
+#' @param agents tbl with snapshot of agents at a given decision time
+#' @details \code{agents} should have the fields \code{$truth} and
+#'   \code{$sensitivity}
+#'
+#' @importFrom stats rnorm
+#'
+#' @return agents' percepts
+getPercept <- function(agents) {
+  agents$truth +    # true value
+    # normally distributed noise with sd = 1/sensitivity
+    rnorm(nrow(agents), 0, 1/agents$sensitivity)
+}
+
+#' Return the confidence of the \code{agents} given a percept, confidence
+#' steepness, and bias.
+#' @param agents tbl with a snapshot of agents at a given decision time
+#' @param truth_sd agents' beliefs about the world's variability
+#' @details \code{agents} should have the fields \code{$percept},
+#'   \code{$confidence_slope}, and \code{$bias}
+#'
+#' @importFrom stats dnorm
+#'
+#' @return agents' confidence the answer is 1 vs 0 as a proportion.
+getConfidence <- function(agents, truth_sd) {
+  percept <- sigmoid(agents$percept, agents$confidence_slope)
+  # initial confidence is a bayesian combination of
+  # P(R|data) = (P(R) * P(data|R)) / (P(L) * P(data|L))
+  pRight <- agents$bias * dnorm(percept, 1, truth_sd)
+  pLeft <- (1 - agents$bias) * dnorm(percept, 0, truth_sd)
+  # return initial decision with confidence
+  pRight / (pRight + pLeft)
+}
+
+#' Return the advisor selections based on \code{graph}
+#' @param graph weighted trust matrix for agents
+#' @param exponent power to which trust weights are raised for probabilistic
+#'   selection; NA or 0 means selection is equally weighted
+#' @return vector of the advisor id selected by each agent
+selectAdvisor <- function(graph, exponent = 1) {
+  # pick an advisor
+  if (is.na(exponent) || exponent == 0) {
+    probabilities <- matrix(1, nrow = nrow(graph), ncol = ncol(graph))
+  } else {
+    probabilities <- graph ^ exponent
+  }
+  # never ask yourself - set diag to just below minimum value
+  # this approach supports negative values of exponent without self-seeking
+  diag(probabilities) <- apply(probabilities, 1, min) - .0001
+  sapply(1:nrow(graph), function(i)
+    sample(
+      col(probabilities)[i, ], # ids are column numbers
+      size = 1,
+      prob = probabilities[i, ] - min(probabilities[i, ]) # self prob to zero
+    )
+  )
+}
+
+#' Weighted average where \code{a} uses \code{weight_a} and \code{b} uses
+#' \code{1 - weight_a}
+#' @param a numeric
+#' @param b numeric
+#' @param weight_a weight given to a (1-\code{weight_a}) is used for \code{b}
+weighted <- function(a, b, weight_a) {
+  a * weight_a + b * (1 - weight_a)
+}
+
+#' Return the new trust matrix for agents
+#' @param agents tbl with a snapshot of agents at a given time
+#' @param graph connectivity matrix of trust
+#' @param truth_sd agents' beliefs about the variability of the world
+#'
+#' @details Agents work out how expected advice was given their initial
+#' estimate, and in/decrease their trust according to that likelihood, scaled
+#' by each agent's trust_volatility.
+#'
+#' @importFrom stats pnorm
+#'
+#' @return Connectivity matrix of trust after accounting for agents' decisions
+newWeights <- function(agents, graph, truth_sd) {
+  n_agents <- nrow(graph)
+  # how expected was the advice | initial estimate?
+  pAdvice <- pnorm(.5, agents$initial, truth_sd)
+  # shift so -ve adjustment possible
+  pAdvice <- ifelse(agents$advice, pAdvice, 1 - pAdvice) - .5
+
+  W <- as.vector(graph)
+  W[(agents$id - 1) * n_agents + agents$advisor] <-
+    W[(agents$id - 1) * n_agents + agents$advisor] +
+    pAdvice * agents$trust_volatility
+
+  W <- pmax(0.0001, pmin(1, W)) # cap weights
+  W <- matrix(W, n_agents, n_agents)
+  diag(W) <- 0
+  W
 }

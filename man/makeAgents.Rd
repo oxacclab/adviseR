@@ -9,15 +9,16 @@ is taken (modified over time).}
 makeAgents(
   n_agents = n_agents,
   n_decisions = n_decisions,
-  bias_mean = 1,
+  bias_mean = 0,
   bias_sd = 1,
   sensitivity_sd = 1,
   trust_volatility_mean = 0.05,
   trust_volatility_sd = 0.01,
   bias_volatility_mean = 0.05,
   bias_volatility_sd = 0.01,
-  starting_graph = NULL,
-  asymptotic_confidence = c(0, 1)
+  confidence_slope_mean = 1,
+  confidence_slope_sd = 0,
+  starting_graph = NULL
 )
 }
 \arguments{
@@ -26,7 +27,9 @@ makeAgents(
 \item{n_decisions}{number of decisions}
 
 \item{bias_mean}{the mean for the agents' bias distribution (agents' biases
-are drawn from normal distributions with mean +/- biasMean)}
+are drawn from normal distributions with mean +/- biasMean). Translated via
+sigmoid function to between 0 and 1, and represents the prior probability
+that the answer is 1.}
 
 \item{bias_sd}{standard deviation for the bias distribution}
 
@@ -42,12 +45,14 @@ proportion towards the final decision value from current bias at each step)}
 
 \item{bias_volatility_sd}{standard deviation}
 
+\item{confidence_slope_mean}{the mean of the distribution from which agents
+take their slopes for the sigmoid function mapping continuous evidence to
+a probability of a categorical decision.}
+
+\item{confidence_slope_sd}{standard deviation}
+
 \item{starting_graph}{single number, vector, or n_agents-by-n_agents matrix
 of starting trust weights between agents. Coerced to numeric}
-
-\item{asymptotic_confidence}{mean and SD of asymptotic confidence slopes for
-sigmoid function, function to generate slopes given agent details, or F to
-leave out confidence translation columns}
 }
 \value{
 \code{list(

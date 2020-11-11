@@ -7,19 +7,20 @@
 runSimulation(
   n_agents = 6,
   n_decisions = 200,
-  conf = T,
-  bias_mean = 1,
+  bias_mean = 0,
   bias_sd = 1,
   sensitivity_sd = 1,
   trust_volatility_mean = 0.05,
   trust_volatility_sd = 0.01,
   bias_volatility_mean = 0.05,
   bias_volatility_sd = 0.01,
+  confidence_slope_mean = 1,
+  confidence_slope_sd = 0,
   starting_graph = NULL,
   randomSeed = NA,
-  truth_fun = function(model, d) stats::rnorm(1),
-  weighted_sampling = NA,
-  asymptotic_confidence = c(0, 1)
+  truth_fun = function(model, d) stats::rnorm(1, 0, model$parameters$truth_sd),
+  truth_sd = 0.5,
+  weighted_sampling = NA
 )
 }
 \arguments{
@@ -27,10 +28,9 @@ runSimulation(
 
 \item{n_decisions}{number of decisions to simulate}
 
-\item{conf}{whether or not agents use confidence to update trust}
-
 \item{bias_mean}{the mean for the agents' bias distribution (agents' biases
-are drawn from normal distributions with mean +/- biasMean)}
+are drawn from normal distributions with mean +/- biasMean). Capped to
+between 0 and 1, and represents the prior probability that the answer is 1.}
 
 \item{bias_sd}{standard deviation for the bias distribution}
 
@@ -46,6 +46,13 @@ proportion towards the final decision value from current bias at each step)}
 
 \item{bias_volatility_sd}{standard deviation}
 
+\item{confidence_slope_mean}{the mean of the distribution from which agents
+take their slopes for the sigmoid function mapping continuous evidence to
+a probability of a categorical decision. \code{\link{abs}} is used to
+avoid negative slopes.}
+
+\item{confidence_slope_sd}{standard deviation}
+
 \item{starting_graph}{single number, vector, or n_agents-by-n_agents matrix
 of starting trust weights between agents. Coerced to numeric}
 
@@ -54,21 +61,15 @@ of starting trust weights between agents. Coerced to numeric}
 \item{truth_fun}{function taking the simulation and decision number as
 arguments and returning the true state of the world as a single number}
 
+\item{truth_sd}{standard deviation of the truth function that the agents use
+to calculate the probability of values given their biases.}
+
 \item{weighted_sampling}{a non-zero/NA value means agents choose who to seek
 advice from according to how likely they are to trust the advice. The
 weights are multiplied by this value (so values > 1 make source selection
 more pronounced than advice weighting, and values < 1 make source selection
 less pronounced than advice weighting). Negative values will make agents
 actively seek out those they do not trust for advice.}
-
-\item{asymptotic_confidence}{whether to constrain confidence in decision to
-be between 0 (certain left) and 1 (certain right), as determined by a
-sigmoid function. If this is a length 2 vector it contains the mean and SD
-of the distribution from which agent sigmoid slopes are drawn. If this is
-a function, it is called with the agents' details and should return the
-slopes as a vector. \code{\link{abs}} is used to avoid negative slopes.
-If this is FALSE, decision confidence is simply the agent's estimate of the
-state of the world.}
 }
 \value{
 a list with \itemize{
