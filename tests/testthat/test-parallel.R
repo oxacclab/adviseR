@@ -15,9 +15,9 @@ test_that('Simple parallel simulation', {
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
   expect_equal(models[[1]]$parameters, basic.model$parameters)
-  expect_identical(models[[1]]$model$agents, basic.model$model$agents)
+  expect_equal(models[[1]]$model$agents, basic.model$model$agents)
   expect_equal(models[[2]]$parameters, bias.model$parameters)
-  expect_identical(models[[2]]$model$agents, bias.model$model$agents)
+  expect_equal(models[[2]]$model$agents, bias.model$model$agents)
 })
 
 if (F) {

@@ -7,7 +7,7 @@ test_that('Simple simulation', {
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
   expect_equal(model$parameters, bias.model$parameters)
-  expect_identical(model$model$agents, bias.model$model$agents)
+  expect_equal(model$model$agents, bias.model$model$agents)
 })
 
 test_that('Simulation network graphs', {

@@ -9,7 +9,7 @@ test_that('Custom truth_fun', {
     truth_sd = 1
   )
   expect_equal(model$parameters, truth_fun.model$parameters)
-  expect_identical(model$model$agents, truth_fun.model$model$agents)
+  expect_equal(model$model$agents, truth_fun.model$model$agents)
 })
 
 test_that('Weighted sampling', {
