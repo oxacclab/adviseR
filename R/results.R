@@ -352,13 +352,6 @@ inspectModel <- function(m) {
   dw <- .1
 
   list(
-    networkGraph = networkGraph(
-      m,
-      mark.groups = list(
-        which(V(m$model$graphs[[1]])$bias <= .5),
-        which(V(m$model$graphs[[1]])$bias > .5)
-      )
-    ),
 
     biasGraph = biasGraph(m),
 

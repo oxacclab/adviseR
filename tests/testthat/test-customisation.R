@@ -49,7 +49,7 @@ test_that('Example thesis simulation', {
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
   expect_equal(m$model$agents, thesis.model$model$agents)
-  expect_equal(length(inspectModel(m)), 5)
+  expect_equal(length(inspectModel(m)), 4)
 })
 
 if (F) {
