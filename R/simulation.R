@@ -300,13 +300,13 @@ weighted <- function(a, b, weight_a) {
 newWeights <- function(agents, graph, truth_sd) {
   n_agents <- nrow(graph)
   # how expected was the advice | initial estimate?
-  pAdvice <- pnorm(.5, agents$initial, truth_sd)
+  pAdvice <- pnorm(.5, agents$initial, truth_sd, lower.tail = F)
   # shift so -ve adjustment possible
   pAdvice <- ifelse(agents$advice, pAdvice, 1 - pAdvice) - .5
 
   W <- as.vector(graph)
-  W[(agents$id - 1) * n_agents + agents$advisor] <-
-    W[(agents$id - 1) * n_agents + agents$advisor] +
+  W[(agents$advisor - 1) * n_agents + agents$id] <-
+    W[(agents$advisor - 1) * n_agents + agents$id] +
     pAdvice * agents$trust_volatility
 
   W <- pmax(0.0001, pmin(1, W)) # cap weights

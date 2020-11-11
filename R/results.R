@@ -116,9 +116,9 @@ biasToColourString <- function(b, colour = c('r', 'g', 'b'),
 
   for (clr in c('r', 'g', 'b')) {
     if (clr %in% colour) {
-      out <- paste0(out, x)
-    } else {
       out <- paste0(out, 'FF')
+    } else {
+      out <- paste0(out, x)
     }
   }
 
@@ -134,14 +134,14 @@ biasToColourString <- function(b, colour = c('r', 'g', 'b'),
 #'
 #' @return plot object
 #'
-#' @importFrom igraph E E<- V layout_in_circle
+#' @importFrom igraph E E<- V layout_nicely
 #'
 #' @export
 plotGraph <- function(
   model,
   i,
   activeColours = T,
-  layout = igraph::layout_in_circle,
+  layout = igraph::layout_nicely,
   ...
 ) {
 
@@ -307,4 +307,106 @@ sensitivityGraph <- function(model) {
                                   'Agreement-only advisor updating'),
                            '\nRug marks show where p < .05'),
          caption = settingsStr(model))
+}
+
+#' Return a list with a variety of model graphs and stats
+#' @param m model to inspect
+#' @importFrom igraph edge_attr E V head_of
+#' @importFrom dplyr mutate summarise group_by select if_else %>%
+#' @importFrom tibble as_tibble
+#' @importFrom tidyr pivot_wider nest unnest
+#' @importFrom purrr map_dbl map
+#' @importFrom ggplot2 ggplot geom_hline geom_boxplot geom_line geom_segment
+#'   geom_label scale_y_continuous coord_cartesian facet_grid labs stat_summary
+#' @importFrom rlang .data
+#' @importFrom ez ezANOVA
+#' @importFrom stats median
+#'
+#' @export
+inspectModel <- function(m) {
+  weights <- m$model$graphs[[m$parameters$n_decisions]] %>%
+    edge_attr() %>%
+    as_tibble() %>%
+    mutate(
+      group = factor(if_else(.data$headBias > .5, 'Right', 'Left')),
+      sameGroup = factor(if_else(
+        (.data$headBias > .5) == (.data$tailBias > .5),
+        'Same group',
+        'Different groups'
+      )),
+      id = factor(head_of(
+        m$model$graphs[[m$parameters$n_decisions]],
+        E(m$model$graphs[[m$parameters$n_decisions]])
+      ))
+    ) %>%
+    group_by(.data$id, .data$group, .data$sameGroup) %>%
+    summarise(weight = mean(.data$weight), .groups = 'drop')
+
+  p <- weights %>%
+    nest(d = -.data$group) %>%
+    mutate(
+      p = map_dbl(.data$d, ~ t.test(weight ~ sameGroup, data = .)$p.value),
+      p = round(.data$p, 5)
+    )
+
+  dw <- .1
+
+  list(
+    networkGraph = networkGraph(
+      m,
+      mark.groups = list(
+        which(V(m$model$graphs[[1]])$bias <= .5),
+        which(V(m$model$graphs[[1]])$bias > .5)
+      )
+    ),
+
+    biasGraph = biasGraph(m),
+
+    aov = suppressWarnings({ezANOVA(
+      data = weights,
+      dv = quote(weight),
+      wid = quote(id),
+      within = quote(sameGroup),
+      between = quote(group),
+      type = 2
+    )$ANOVA}),
+
+    aovGraph = weights %>%
+      ggplot(aes(x = .data$sameGroup, y = .data$weight,
+                 colour = .data$group, fill = .data$group)) +
+      geom_hline(yintercept = m$parameters$starting_graph,
+                 linetype = 'dashed') +
+      geom_boxplot(outlier.shape = NA, size = 1, width = dw/2,
+                   aes(group = .data$sameGroup),
+                   colour = 'black') +
+      geom_line(aes(group = .data$id)) +
+      geom_segment(x = 1, xend = 2, y = .9, yend = .9, colour = 'black') +
+      geom_label(y = .9, x = 1.5, colour = 'black', fill = 'white',
+                 aes(label = paste0('p ', .data$p)),
+                 data = p) +
+      scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+      coord_cartesian(clip = F) +
+      facet_grid(~.data$group) +
+      labs(x = 'Group membership with advisor', y = 'Weight given to advice'),
+    # caption = "Simulated trust for average agents.  Simulated agents' trust in other agents at the end of the simulation. Individual lines show the average trust for an agent in those of the same or different group. Violins and boxplots show the distributions of these averages. The groups are arbitrarily named and separate agents by bias strength (whether the bias is positive or negative). Both groups contain some agents with pronounced biases and some with negligible biases.  The dashed line indicates the starting trust level between all agents in the simulation."
+
+    # Plot bias evolution for each model
+    biasEvolution = select(
+      m$model$agents,
+      .data$id,
+      .data$decision,
+      .data$bias
+    ) %>%
+      nest(d = -.data$id) %>%
+      mutate(d = map(.data$d, ~mutate(., group = .data$bias[[1]]))) %>%
+      unnest(cols = .data$d) %>%
+      mutate(group = if_else(.data$group > .5, 'Right', 'Left')) %>%
+      ggplot(aes(x = .data$decision, y = .data$bias, colour = .data$group)) +
+      geom_hline(yintercept = .5, linetype = 'dashed') +
+      geom_line(aes(group = paste0(.data$id)), alpha = .25) +
+      stat_summary(geom = 'line', aes(group = .data$group),
+                   size = 1, fun = median)
+    # Interesting that the bias updating actually reduces polarisation here!
+    # Not that it necessarily gets agents closer to the truth...
+  )
 }

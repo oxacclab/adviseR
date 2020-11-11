@@ -4,7 +4,7 @@
 \alias{plotGraph}
 \title{Plot an igraph of a network}
 \usage{
-plotGraph(model, i, activeColours = T, layout = igraph::layout_in_circle, ...)
+plotGraph(model, i, activeColours = T, layout = igraph::layout_nicely, ...)
 }
 \arguments{
 \item{model}{network to plot}

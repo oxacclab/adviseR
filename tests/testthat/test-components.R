@@ -103,19 +103,32 @@ test_that('weighted works', {
 
 test_that('newWeights works', {
   a <- data.frame(
+    id = 1:3,
     initial = rep(.5, 3),
     advice = rep(.5, 3),
-    advisor = c(3, 1, 2),
-    trust_volatility = 1
+    advisor = c(2, 3, 1),
+    trust_volatility = 5
   )
   g <- t(matrix(
     c(
-      0, 1, 0,
-      0, 0, 1,
-      1, 0, 0
+      0, .75, 0,
+      0, 0, .75,
+      .75, 0, 0
     ),
     nrow = 3,
     ncol = 3
   ))
-  expect_identical(round(newWeights(a, g, .5)), g)
+  expect_equal(round(newWeights(a, g, .5), 2), g)
+  # Update in the right direction
+  a <- data.frame(
+    id = 1:3,
+    initial = rep(.75, 3),
+    advice = c(0, 1, 1),
+    advisor = c(2, 3, 1),
+    trust_volatility = 1
+  )
+  w <- newWeights(a, g, .5)
+  expect_gt(g[1, a$advisor[1]], w[1, a$advisor[1]])
+  expect_lt(g[2, a$advisor[2]], w[2, a$advisor[2]])
+  expect_lt(g[3, a$advisor[3]], w[3, a$advisor[3]])
 })
