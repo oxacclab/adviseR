@@ -7,6 +7,7 @@
 runSimulation(
   n_agents = 6,
   n_decisions = 200,
+  decision_flags = 3,
   bias_mean = 0,
   bias_sd = 1,
   sensitivity_sd = 1,
@@ -27,6 +28,13 @@ runSimulation(
 \item{n_agents}{number of nodes in the network}
 
 \item{n_decisions}{number of decisions to simulate}
+
+\item{decision_flags}{numeric vector recycled to \code{length(n_decisions)}
+containing boolean flags for which components of the simulation to run at
+each decision point.
+This vector can be used to e.g. run several decisions without updating
+biases before allowing biases to update on the resulting trust network.
+Flag values are 1 = trust update; 2 = bias update. Defaults to all.}
 
 \item{bias_mean}{the mean for the agents' bias distribution (agents' biases
 are drawn from normal distributions with mean +/- biasMean). Capped to

@@ -1,6 +1,12 @@
 context('Component tests')
 library(adviseR)
 
+test_that('recycle recycles', {
+  expect_equal(recycle(1:3, 9), rep(1:3, 3))
+  expect_equal(recycle(1:3, 8), rep(1:3, 3)[1:8])
+  expect_warning(recycle(1:3, 8))
+})
+
 test_that('getPercept works', {
   # Right length of values and Infinite sensitivity returns truth
   x <- data.frame(sensitivity = rep(Inf, 25), truth = rep(1, 25))

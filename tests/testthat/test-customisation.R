@@ -1,5 +1,6 @@
 context('Custom functionality')
 library(adviseR)
+library(igraph)
 
 test_that('Custom truth_fun', {
   load('data/truth_fun-model.rda')
@@ -50,6 +51,34 @@ test_that('Example thesis simulation', {
   # and $graphs have different ids (presumably to avoid conflicts)
   expect_equal(m$model$agents, thesis.model$model$agents)
   expect_equal(length(inspectModel(m)), 4)
+})
+
+test_that('Bias update skipped with mask', {
+  m <- runSimulation(decision_flags = rep(c(1, 3), each = 100))
+  expect_equal(
+    m$model$agents$bias[m$model$agents$decision == 1],
+    m$model$agents$bias[m$model$agents$decision == 100]
+  )
+  expect_false(
+    all(
+      m$model$agents$bias[m$model$agents$decision == 1] ==
+        m$model$agents$bias[m$model$agents$decision == 200]
+    )
+  )
+})
+
+test_that('Trust update skipped with mask', {
+  m <- runSimulation(decision_flags = rep(c(2, 3), each = 100))
+  expect_equal(
+    edge_attr(m$model$graphs[[1]], 'weight'),
+    edge_attr(m$model$graphs[[100]], 'weight')
+  )
+  expect_error(
+    expect_equal(
+      edge_attr(m$model$graphs[[1]], 'weight'),
+      edge_attr(m$model$graphs[[200]], 'weight')
+    )
+  )
 })
 
 if (F) {

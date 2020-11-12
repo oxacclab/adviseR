@@ -1,6 +1,12 @@
 #' Run the simulation
 #' @param n_agents number of nodes in the network
 #' @param n_decisions number of decisions to simulate
+#' @param decision_flags numeric vector recycled to \code{length(n_decisions)}
+#'   containing boolean flags for which components of the simulation to run at
+#'   each decision point.
+#'   This vector can be used to e.g. run several decisions without updating
+#'   biases before allowing biases to update on the resulting trust network.
+#'   Flag values are 1 = trust update; 2 = bias update. Defaults to all.
 #' @param bias_mean the mean for the agents' bias distribution (agents' biases
 #'   are drawn from normal distributions with mean +/- biasMean). Capped to
 #'   between 0 and 1, and represents the prior probability that the answer is 1.
@@ -48,6 +54,7 @@
 runSimulation <- function(
   n_agents = 6,
   n_decisions = 200,
+  decision_flags = 3,
   bias_mean = 0,
   bias_sd = 1,
   sensitivity_sd = 1,
@@ -77,6 +84,7 @@ runSimulation <- function(
         parameters = list(
           n_agents = n_agents,
           n_decisions = n_decisions,
+          decision_flags = recycle(decision_flags, n_decisions),
           bias_mean = bias_mean,
           bias_sd = bias_sd,
           sensitivity_sd = sensitivity_sd,
@@ -205,15 +213,20 @@ simulationStep <- function(model, d) {
   model$model$agents[rows, ] <- agents
 
   # Updating bias for next time
-  if (max(rows) != nrow(model$model$agents)) {
+  if (max(rows) != nrow(model$model$agents) &&
+      bitwAnd(model$parameters$decision_flags[d], 2) == 2) {
     # Nudge bias towards observed (i.e. based on final decision) truth
     model$model$agents[rows + model$parameters$n_agents, "bias"] <-
       weighted(agents$final, agents$bias, agents$bias_volatility)
   }
 
   # Updating weights
-  model$model$graphs[[d + 1]] <-
-    newWeights(agents, model$model$graphs[[d]], model$parameters$truth_sd)
+  if (bitwAnd(model$parameters$decision_flags[d], 1) == 1) {
+    model$model$graphs[[d + 1]] <-
+      newWeights(agents, model$model$graphs[[d]], model$parameters$truth_sd)
+  } else {
+    model$model$graphs[[d + 1]] <- model$model$graphs[[d]]
+  }
 
   model
 }

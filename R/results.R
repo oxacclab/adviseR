@@ -57,7 +57,6 @@ settingsStr <- function(model) {
   paste0('Model parameters:\n',
          'Agents = ', model$parameters$n_agents,
          '; Decisions = ', model$parameters$n_decisions, '; ',
-         'ConfidenceWeighted = ', model$parameters$conf, '; ',
          'Weighted sampling = ', model$parameters$weighted_sampling, ';\n',
          'Sensitivity SD = ', model$parameters$sensitivity_sd, '; ',
          'Bias mean (SD) = +/-', model$parameters$bias_mean,
@@ -309,6 +308,51 @@ sensitivityGraph <- function(model) {
          caption = settingsStr(model))
 }
 
+#' Return a graph of the biases of the model agents and their change over time.
+#' @param model model to inspect
+#' @param summaryFun function to use to summarise each group's bias
+#' @importFrom dplyr select mutate
+#' @importFrom rlang .data
+#' @importFrom tidyr nest unnest
+#' @importFrom ggplot2 ggplot geom_hline geom_line stat_summary geom_rect
+#' scale_alpha_manual scale_y_continuous
+#' @export
+biasEvolution <- function(model, summaryFun = stats::median) {
+  select(
+    model$model$agents,
+    .data$id,
+    .data$decision,
+    .data$bias
+  ) %>%
+    nest(d = -.data$id) %>%
+    mutate(d = map(.data$d, ~mutate(., group = .data$bias[[1]]))) %>%
+    unnest(cols = .data$d) %>%
+    mutate(group = if_else(.data$group > .5, 'Right', 'Left')) %>%
+    # Add in bias update flag info
+    nest(d = -.data$decision) %>%
+    mutate(
+      skipBiasUpdate = bitwAnd(
+        model$parameters$decision_flags[.data$decision],
+        2
+      ) != 2,
+      skipBiasUpdate = factor(.data$skipBiasUpdate, levels = c(T, F))
+    ) %>%
+    unnest(cols = .data$d) %>%
+    ggplot(aes(x = .data$decision, y = .data$bias, colour = .data$group)) +
+    geom_rect(aes(
+      xmin = .data$decision - .5,
+      xmax = .data$decision + .5,
+      ymin = -Inf, ymax = Inf,
+      alpha = .data$skipBiasUpdate
+    ), fill = 'grey85', colour = NA) +
+    geom_hline(yintercept = .5, linetype = 'dashed') +
+    geom_line(aes(group = paste0(.data$id)), alpha = .25) +
+    stat_summary(geom = 'line', aes(group = .data$group),
+                 size = 1, fun = summaryFun) +
+    scale_y_continuous(limits = c(0, 1)) +
+    scale_alpha_manual(values = c(1, 0), breaks = c(T, F), drop = F)
+}
+
 #' Return a list with a variety of model graphs and stats
 #' @param m model to inspect
 #' @importFrom igraph edge_attr E V head_of
@@ -317,10 +361,9 @@ sensitivityGraph <- function(model) {
 #' @importFrom tidyr pivot_wider nest unnest
 #' @importFrom purrr map_dbl map
 #' @importFrom ggplot2 ggplot geom_hline geom_boxplot geom_line geom_segment
-#'   geom_label scale_y_continuous coord_cartesian facet_grid labs stat_summary
+#'   geom_label scale_y_continuous coord_cartesian facet_grid labs
 #' @importFrom rlang .data
 #' @importFrom ez ezANOVA
-#' @importFrom stats median
 #'
 #' @export
 inspectModel <- function(m) {
@@ -384,22 +427,6 @@ inspectModel <- function(m) {
     # caption = "Simulated trust for average agents.  Simulated agents' trust in other agents at the end of the simulation. Individual lines show the average trust for an agent in those of the same or different group. Violins and boxplots show the distributions of these averages. The groups are arbitrarily named and separate agents by bias strength (whether the bias is positive or negative). Both groups contain some agents with pronounced biases and some with negligible biases.  The dashed line indicates the starting trust level between all agents in the simulation."
 
     # Plot bias evolution for each model
-    biasEvolution = select(
-      m$model$agents,
-      .data$id,
-      .data$decision,
-      .data$bias
-    ) %>%
-      nest(d = -.data$id) %>%
-      mutate(d = map(.data$d, ~mutate(., group = .data$bias[[1]]))) %>%
-      unnest(cols = .data$d) %>%
-      mutate(group = if_else(.data$group > .5, 'Right', 'Left')) %>%
-      ggplot(aes(x = .data$decision, y = .data$bias, colour = .data$group)) +
-      geom_hline(yintercept = .5, linetype = 'dashed') +
-      geom_line(aes(group = paste0(.data$id)), alpha = .25) +
-      stat_summary(geom = 'line', aes(group = .data$group),
-                   size = 1, fun = median)
-    # Interesting that the bias updating actually reduces polarisation here!
-    # Not that it necessarily gets agents closer to the truth...
+    biasEvolution = biasEvolution(m)
   )
 }
