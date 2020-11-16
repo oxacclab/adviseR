@@ -39,7 +39,7 @@ detailGraphs <- function(model) {
     V(g[[i]])$biasColour <- ifelse(
       agents$bias[rows] > .5,
       biasToColourString(agents$bias[rows], 'b'),
-      biasToColourString(agents$bias[rows], 'r')
+      biasToColourString(1 - agents$bias[rows], 'r')
     )
   }
 
