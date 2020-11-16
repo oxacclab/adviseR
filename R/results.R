@@ -173,16 +173,36 @@ plotGraph <- function(
 
 #' Plot a double-graph of network connectivity at the first and last decisions
 #' @param model network
+#' @param timepoints either an integer representing the number of evenly-spaced
+#'   time points (including first and final), or an integer vector giving the
+#'   time points to inspect.
 #' @inheritDotParams plotGraph
 #'
 #' @importFrom graphics par
 #'
 #' @return NULL (invisible)
 #' @export
-networkGraph <- function(model, ...) {
-  par(mfrow = c(1,2))
-  plotGraph(model, 1, activeColours = F, ...)
-  plotGraph(model, model$parameters$n_decisions, activeColours = F, ...)
+networkGraph <- function(model, timepoints = 2, ...) {
+  nTP <- if (length(timepoints) == 1) timepoints else length(timepoints)
+  if (nTP > 1 && length(timepoints) == 1) {
+    timepoints <- round(seq(1, length(model$model$graphs), length.out = nTP))
+  }
+  if (nTP < 1)
+    stop('At least one timepoint must be selected.')
+  old <- switch(
+    if (nTP > length(letters)) 'z' else letters[nTP],
+    a = NULL,
+    b = par(mfrow = c(1, 2)),
+    c = par(mfrow = c(1, 3)),
+    d = par(mfrow = c(2, 2)),
+    par(mfrow = c(ceiling(nTP / 3), 3))
+  )
+  for (tp in timepoints) {
+    plotGraph(model, tp, activeColours = F, ...)
+  }
+  if (!is.null(old)) {
+    par(old)
+  }
   invisible(NULL)
 }
 
