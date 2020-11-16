@@ -213,19 +213,20 @@ simulationStep <- function(model, d) {
   model$model$agents[rows, ] <- agents
 
   # Updating bias for next time
-  if (max(rows) != nrow(model$model$agents) &&
-      bitwAnd(model$parameters$decision_flags[d], 2) == 2) {
-    # Nudge bias towards observed (i.e. based on final decision) truth
-    model$model$agents[rows + model$parameters$n_agents, "bias"] <-
-      weighted(agents$final, agents$bias, agents$bias_volatility)
-  }
+  if (max(rows) != nrow(model$model$agents)) {
+    if (bitwAnd(model$parameters$decision_flags[d], 2) == 2) {
+      # Nudge bias towards observed (i.e. based on final decision) truth
+      model$model$agents[rows + model$parameters$n_agents, "bias"] <-
+        weighted(agents$final, agents$bias, agents$bias_volatility)
+    }
 
-  # Updating weights
-  if (bitwAnd(model$parameters$decision_flags[d], 1) == 1) {
-    model$model$graphs[[d + 1]] <-
-      newWeights(agents, model$model$graphs[[d]], model$parameters$truth_sd)
-  } else {
-    model$model$graphs[[d + 1]] <- model$model$graphs[[d]]
+    # Updating weights
+    if (bitwAnd(model$parameters$decision_flags[d], 1) == 1) {
+      model$model$graphs[[d + 1]] <-
+        newWeights(agents, model$model$graphs[[d]])
+    } else {
+      model$model$graphs[[d + 1]] <- model$model$graphs[[d]]
+    }
   }
 
   model
@@ -298,10 +299,25 @@ weighted <- function(a, b, weight_a) {
   a * weight_a + b * (1 - weight_a)
 }
 
+#' Return a measure of how compatible advice is with an initial decision
+#' @param initial vector of initial decisions
+#' @param advice vector of advisory estimates
+#' @return 1 - error score
+adviceCompatibility <- function(initial, advice) {
+  # Turn around left estimates so everything starts off initial > .5, advice in
+  # same direction
+  left <- initial < .5
+  initial[left] <- 1 - initial[left]
+  advice[left] <- 1 - advice[left]
+  # Calculate error for advice|initial
+  residual <- abs(advice - initial)
+  # bigger values should indicate more compatibility
+  1 - residual
+}
+
 #' Return the new trust matrix for agents
 #' @param agents tbl with a snapshot of agents at a given time
 #' @param graph connectivity matrix of trust
-#' @param truth_sd agents' beliefs about the variability of the world
 #'
 #' @details Agents work out how expected advice was given their initial
 #' estimate, and in/decrease their trust according to that likelihood, scaled
@@ -310,19 +326,19 @@ weighted <- function(a, b, weight_a) {
 #' @importFrom stats pnorm
 #'
 #' @return Connectivity matrix of trust after accounting for agents' decisions
-newWeights <- function(agents, graph, truth_sd) {
+newWeights <- function(agents, graph) {
   n_agents <- nrow(graph)
-  # how expected was the advice | initial estimate?
-  pAdvice <- pnorm(.5, agents$initial, truth_sd, lower.tail = F)
-  # shift so -ve adjustment possible
-  pAdvice <- ifelse(agents$advice, pAdvice, 1 - pAdvice) - .5
+
+  adviceAgree <- adviceCompatibility(agents$initial, agents$advice) - .5
 
   W <- as.vector(graph)
   W[(agents$advisor - 1) * n_agents + agents$id] <-
     W[(agents$advisor - 1) * n_agents + agents$id] +
-    pAdvice * agents$trust_volatility
+    adviceAgree * agents$trust_volatility
 
-  W <- pmax(0.0001, pmin(1, W)) # cap weights
+  err <- 1e-4
+
+  W <- pmax(err, pmin(1 - err, W)) # cap weights
   W <- matrix(W, n_agents, n_agents)
   diag(W) <- 0
   W

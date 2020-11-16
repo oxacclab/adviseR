@@ -4,10 +4,14 @@
 \alias{networkGraph}
 \title{Plot a double-graph of network connectivity at the first and last decisions}
 \usage{
-networkGraph(model, ...)
+networkGraph(model, timepoints = 2, ...)
 }
 \arguments{
 \item{model}{network}
+
+\item{timepoints}{either an integer representing the number of evenly-spaced
+time points (including first and final), or an integer vector giving the
+time points to inspect.}
 
 \item{...}{
   Arguments passed on to \code{\link[=plotGraph]{plotGraph}}

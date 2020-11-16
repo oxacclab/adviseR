@@ -93,7 +93,7 @@ test_that('selectAdvisor works', {
     )
   )
   # Probablistic with exponent
-  y <- sapply(1:1000, function(i) selectAdvisor(g, 5))
+  y <- sapply(1:5000, function(i) selectAdvisor(g, 5))
   expect_equal(round(rowMeans(y), 1), c(3.0, 2.0, 2.0))
 })
 
@@ -107,11 +107,22 @@ test_that('weighted works', {
   expect_equal(weighted(x$a, x$b, x$weights), out)
 })
 
+test_that('adviceCompatibility works', {
+  x <- data.frame(
+    initial = c(0, .25, .5, .75, 1, 1, .75, .25),
+    advice = c(0, 0, 0, 0, 0, 1, 1, 1)
+  )
+  expect_equal(
+    adviceCompatibility(x$initial, x$advice),
+    c(1, .75, .5, .25, 0, 1, .75, .25)
+  )
+})
+
 test_that('newWeights works', {
   a <- data.frame(
     id = 1:3,
     initial = rep(.5, 3),
-    advice = rep(.5, 3),
+    advice = c(1, 0, 1),
     advisor = c(2, 3, 1),
     trust_volatility = 5
   )
@@ -124,7 +135,7 @@ test_that('newWeights works', {
     nrow = 3,
     ncol = 3
   ))
-  expect_equal(round(newWeights(a, g, .5), 2), g)
+  expect_equal(round(newWeights(a, g), 2), g)
   # Update in the right direction
   a <- data.frame(
     id = 1:3,
@@ -133,7 +144,7 @@ test_that('newWeights works', {
     advisor = c(2, 3, 1),
     trust_volatility = 1
   )
-  w <- newWeights(a, g, .5)
+  w <- newWeights(a, g)
   expect_gt(g[1, a$advisor[1]], w[1, a$advisor[1]])
   expect_lt(g[2, a$advisor[2]], w[2, a$advisor[2]])
   expect_lt(g[3, a$advisor[3]], w[3, a$advisor[3]])

@@ -4,14 +4,12 @@
 \alias{newWeights}
 \title{Return the new trust matrix for agents}
 \usage{
-newWeights(agents, graph, truth_sd)
+newWeights(agents, graph)
 }
 \arguments{
 \item{agents}{tbl with a snapshot of agents at a given time}
 
 \item{graph}{connectivity matrix of trust}
-
-\item{truth_sd}{agents' beliefs about the variability of the world}
 }
 \value{
 Connectivity matrix of trust after accounting for agents' decisions
