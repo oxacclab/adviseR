@@ -171,7 +171,7 @@ plotGraph <- function(
   )
 }
 
-#' Plot a double-graph of network connectivity at the first and last decisions
+#' Plot multiple graphs of network connectivity to show network evolution
 #' @param model network
 #' @param timepoints either an integer representing the number of evenly-spaced
 #'   time points (including first and final), or an integer vector giving the
@@ -208,15 +208,19 @@ networkGraph <- function(model, timepoints = 2, ...) {
 
 #' Calculation of bias-tie strength correlations
 #' @param model network whose correlations should be calculated
+#' @param use_starting_bias whether to use the starting bias as opposed to the
+#'   current bias at each timestep
 #' @importFrom tibble tibble
 #' @importFrom stats cor.test
-.biasCorrelation <- function(model) {
+.biasCorrelation <- function(model, use_starting_bias = F) {
   cors <- NULL
+  biases <- NULL
   for (d in 1:model$parameters$n_decisions) {
     tmp <- model$model$graphs[[d]]
+    if (all(is.null(biases)) | !use_starting_bias)
+      biases <- as.numeric(tmp[attr = 'biasSimilarity'])
 
-    test <- cor.test(as.numeric(tmp[attr = 'biasSimilarity']),
-                     as.numeric(tmp[attr = 'weight']))
+    test <- cor.test(biases, as.numeric(tmp[attr = 'weight']))
 
     cors <- rbind(cors, tibble(decision = d,
                                r = test$estimate,
@@ -230,13 +234,15 @@ networkGraph <- function(model, timepoints = 2, ...) {
 
 #' Correlation between bias and tie strength at each decision point
 #' @param model network to calculate correlations for
+#' @param use_starting_bias whether to use the starting bias as opposed to the
+#'   current bias at each timestep
 #' @return ggplot of correlations
 #' @importFrom dplyr filter
 #' @importFrom ggplot2 ggplot aes geom_hline geom_point geom_errorbar labs scale_y_continuous
 #' @importFrom rlang .data
 #' @export
-biasGraph <- function(model) {
-  cors <- .biasCorrelation(model)
+biasGraph <- function(model, use_starting_bias = F) {
+  cors <- .biasCorrelation(model, use_starting_bias = use_starting_bias)
 
   # Plot correlation
   ggplot(cors, aes(x = .data$decision,
@@ -253,7 +259,8 @@ biasGraph <- function(model) {
          caption = settingsStr(model))
 }
 
-#' Calculate the strength of the sensitivity-advice weight correlation for in- and out-degree
+#' Calculate the strength of the sensitivity-advice weight correlation for in-
+#' and out-degree
 #' @param model network to calculate the correlations for
 #' @importFrom tibble tibble
 #' @importFrom stats cor.test
@@ -302,7 +309,8 @@ biasGraph <- function(model) {
 #' @param model network to calculate correlations for
 #' @return ggplot of correlations
 #' @importFrom dplyr filter
-#' @importFrom ggplot2 ggplot geom_hline geom_ribbon geom_line geom_rug labs scale_y_continuous
+#' @importFrom ggplot2 ggplot geom_hline geom_ribbon geom_line geom_rug labs
+#'   scale_y_continuous
 #' @importFrom rlang .data
 #' @export
 sensitivityGraph <- function(model) {

@@ -2,7 +2,7 @@
 % Please edit documentation in R/results.R
 \name{networkGraph}
 \alias{networkGraph}
-\title{Plot a double-graph of network connectivity at the first and last decisions}
+\title{Plot multiple graphs of network connectivity to show network evolution}
 \usage{
 networkGraph(model, timepoints = 2, ...)
 }
@@ -25,5 +25,5 @@ time points to inspect.}
 NULL (invisible)
 }
 \description{
-Plot a double-graph of network connectivity at the first and last decisions
+Plot multiple graphs of network connectivity to show network evolution
 }

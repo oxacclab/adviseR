@@ -4,10 +4,13 @@
 \alias{.biasCorrelation}
 \title{Calculation of bias-tie strength correlations}
 \usage{
-.biasCorrelation(model)
+.biasCorrelation(model, use_starting_bias = F)
 }
 \arguments{
 \item{model}{network whose correlations should be calculated}
+
+\item{use_starting_bias}{whether to use the starting bias as opposed to the
+current bias at each timestep}
 }
 \description{
 Calculation of bias-tie strength correlations

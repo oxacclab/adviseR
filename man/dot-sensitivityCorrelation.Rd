@@ -2,7 +2,8 @@
 % Please edit documentation in R/results.R
 \name{.sensitivityCorrelation}
 \alias{.sensitivityCorrelation}
-\title{Calculate the strength of the sensitivity-advice weight correlation for in- and out-degree}
+\title{Calculate the strength of the sensitivity-advice weight correlation for in-
+and out-degree}
 \usage{
 .sensitivityCorrelation(model)
 }
@@ -10,5 +11,6 @@
 \item{model}{network to calculate the correlations for}
 }
 \description{
-Calculate the strength of the sensitivity-advice weight correlation for in- and out-degree
+Calculate the strength of the sensitivity-advice weight correlation for in-
+and out-degree
 }

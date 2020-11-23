@@ -4,10 +4,13 @@
 \alias{biasGraph}
 \title{Correlation between bias and tie strength at each decision point}
 \usage{
-biasGraph(model)
+biasGraph(model, use_starting_bias = F)
 }
 \arguments{
 \item{model}{network to calculate correlations for}
+
+\item{use_starting_bias}{whether to use the starting bias as opposed to the
+current bias at each timestep}
 }
 \value{
 ggplot of correlations

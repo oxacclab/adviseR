@@ -17,7 +17,11 @@ test_that('Simulation network graphs', {
 
 test_that('Bias graph', {
   load('data/basic-model.rda')
-  expect_equal('ggplot' %in% class(biasGraph(basic.model)), T)
+  gg <- biasGraph(basic.model)
+  expect_equal('ggplot' %in% class(gg), T)
+  expect_error(
+    expect_equal(gg, biasGraph(basic.model, use_starting_bias = T))
+  )
 })
 
 test_that('Sensitivity graph', {
