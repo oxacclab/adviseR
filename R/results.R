@@ -56,8 +56,9 @@ settingsStr <- function(model) {
 
   paste0('Model parameters:\n',
          'Agents = ', model$parameters$n_agents,
-         '; Decisions = ', model$parameters$n_decisions, '; ',
-         'Weighted sampling = ', model$parameters$weighted_sampling, ';\n',
+         '; Decisions = ', model$parameters$n_decisions,
+         '; Weighted sampling = ', model$parameters$weighted_sampling,
+         '; Confidence-weighted = ', model$parameters$confidence_weighted, ';\n',
          'Sensitivity SD = ', model$parameters$sensitivity_sd, '; ',
          'Bias mean (SD) = +/-', model$parameters$bias_mean,
          ' (', model$parameters$bias_sd, '); ',
