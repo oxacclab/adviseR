@@ -21,7 +21,8 @@ runSimulation(
   randomSeed = NA,
   truth_fun = function(model, d) stats::rnorm(1, 0, model$parameters$truth_sd),
   truth_sd = 0.5,
-  weighted_sampling = NA
+  weighted_sampling = NA,
+  confidence_weighted = T
 )
 }
 \arguments{
@@ -78,6 +79,12 @@ weights are multiplied by this value (so values > 1 make source selection
 more pronounced than advice weighting, and values < 1 make source selection
 less pronounced than advice weighting). Negative values will make agents
 actively seek out those they do not trust for advice.}
+
+\item{confidence_weighted}{whether agents use their own confidence in initial
+decisions to weigh their updating of trust in other agents. If F, agents
+simply examine whether other agents agree (although this produces a cliff
+whereby slight agreement and slight disagreement produce results as
+different as extreme agreement and extreme disagreement).}
 }
 \value{
 a list with \itemize{

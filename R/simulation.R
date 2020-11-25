@@ -36,6 +36,11 @@
 #'   more pronounced than advice weighting, and values < 1 make source selection
 #'   less pronounced than advice weighting). Negative values will make agents
 #'   actively seek out those they do not trust for advice.
+#' @param confidence_weighted whether agents use their own confidence in initial
+#'   decisions to weigh their updating of trust in other agents. If F, agents
+#'   simply examine whether other agents agree (although this produces a cliff
+#'   whereby slight agreement and slight disagreement produce results as
+#'   different as extreme agreement and extreme disagreement).
 #'
 #' @return a list with \itemize{
 #'  \item{"times"}{Timestamps associated with simulation stages.}
@@ -68,7 +73,8 @@ runSimulation <- function(
   randomSeed = NA,
   truth_fun = function(model, d) stats::rnorm(1, 0, model$parameters$truth_sd),
   truth_sd = .5,
-  weighted_sampling = NA
+  weighted_sampling = NA,
+  confidence_weighted = T
 ) {
 
   if (is.na(randomSeed))
@@ -99,7 +105,8 @@ runSimulation <- function(
           randomSeed = .Random.seed[length(.Random.seed)],
           truth_fun = truth_fun,
           truth_sd = truth_sd,
-          weighted_sampling = weighted_sampling
+          weighted_sampling = weighted_sampling,
+          confidence_weighted = as.logical(confidence_weighted)
         )
       )
 
@@ -223,7 +230,11 @@ simulationStep <- function(model, d) {
     # Updating weights
     if (bitwAnd(model$parameters$decision_flags[d], 1) == 1) {
       model$model$graphs[[d + 1]] <-
-        newWeights(agents, model$model$graphs[[d]])
+        newWeights(
+          agents,
+          model$model$graphs[[d]],
+          model$parameters$confidence_weighted
+        )
     } else {
       model$model$graphs[[d + 1]] <- model$model$graphs[[d]]
     }
@@ -315,9 +326,18 @@ adviceCompatibility <- function(initial, advice) {
   1 - residual
 }
 
+#' Return whether the advice agrees with the initial decision
+#' @param initial vector of initial decisions
+#' @param advice vector of advisory estimates
+adviceAgrees <- function(initial, advice) {
+  (initial < .5) == (advice < .5)
+}
+
 #' Return the new trust matrix for agents
 #' @param agents tbl with a snapshot of agents at a given time
 #' @param graph connectivity matrix of trust
+#' @param confidence_weighted whether to use confidence to weight the updating or
+#'  instead rely only on dis/agreement
 #'
 #' @details Agents work out how expected advice was given their initial
 #' estimate, and in/decrease their trust according to that likelihood, scaled
@@ -326,10 +346,13 @@ adviceCompatibility <- function(initial, advice) {
 #' @importFrom stats pnorm
 #'
 #' @return Connectivity matrix of trust after accounting for agents' decisions
-newWeights <- function(agents, graph) {
+newWeights <- function(agents, graph, confidence_weighted = T) {
   n_agents <- nrow(graph)
 
-  adviceAgree <- adviceCompatibility(agents$initial, agents$advice) - .5
+  if (confidence_weighted)
+    adviceAgree <- adviceCompatibility(agents$initial, agents$advice) - .5
+  else
+    adviceAgree <- adviceAgrees(agents$initial, agents$advice) - .5
 
   W <- as.vector(graph)
   W[(agents$advisor - 1) * n_agents + agents$id] <-

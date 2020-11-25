@@ -4,12 +4,15 @@
 \alias{newWeights}
 \title{Return the new trust matrix for agents}
 \usage{
-newWeights(agents, graph)
+newWeights(agents, graph, confidence_weighted = T)
 }
 \arguments{
 \item{agents}{tbl with a snapshot of agents at a given time}
 
 \item{graph}{connectivity matrix of trust}
+
+\item{confidence_weighted}{whether to use confidence to weight the updating or
+instead rely only on dis/agreement}
 }
 \value{
 Connectivity matrix of trust after accounting for agents' decisions
