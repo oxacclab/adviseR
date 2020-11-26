@@ -2,6 +2,7 @@
 
 export(biasEvolution)
 export(biasGraph)
+export(groupRatio)
 export(inspectModel)
 export(networkGraph)
 export(plotGraph)

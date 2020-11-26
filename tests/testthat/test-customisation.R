@@ -51,6 +51,7 @@ test_that('Example thesis simulation', {
   # and $graphs have different ids (presumably to avoid conflicts)
   expect_equal(m$model$agents, thesis.model$model$agents)
   expect_equal(length(inspectModel(m)), 4)
+  expect_lt(groupRatio(m$model$graphs[[1]]), groupRatio(m$model$graphs[[500]]))
 })
 
 test_that('Bias update skipped with mask', {

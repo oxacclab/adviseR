@@ -4,14 +4,22 @@
 \alias{runSimulations}
 \title{Run a suite of simulations defined by params}
 \usage{
-runSimulations(params, cores = parallel::detectCores(), ...)
+runSimulations(
+  params,
+  cores = parallel::detectCores(),
+  summaryFunction = function(model) model,
+  ...
+)
 }
 \arguments{
-\item{params}{dataframe of parameters for simulations
-(see \code{\link{runSimulation}} for details). Can also be a list of lists
-to support custom function arguments}
+\item{params}{dataframe of parameters for simulations (see
+\code{\link{runSimulation}} for details). Can also be a list of lists to
+support custom function arguments}
 
 \item{cores}{number of cores to use in the cluster}
+
+\item{summaryFunction}{used to summarise each model after running. Takes the
+completed model as its argument.}
 
 \item{...}{
   Arguments passed on to \code{\link[parallel:makeCluster]{parallel::makeCluster}}

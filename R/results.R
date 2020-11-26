@@ -10,6 +10,7 @@ detailGraphs <- function(model) {
   # transpose
   g <- lapply(model$model$graphs, t)
   g <- lapply(g, graph_from_adjacency_matrix, weighted = T)
+  head_group <- NULL; tail_group <- NULL
 
   for (i in 1:N$d) {
     rows <- which(agents$decision == i)
@@ -41,12 +42,34 @@ detailGraphs <- function(model) {
       biasToColourString(agents$bias[rows], 'b'),
       biasToColourString(1 - agents$bias[rows], 'r')
     )
+
+    # group at time 1
+    if (is.null(head_group))
+      head_group <- agents$bias[head_of(g[[i]], E(g[[i]]))] > .5
+    if (is.null(tail_group))
+      tail_group <- agents$bias[tail_of(g[[i]], E(g[[i]]))] > .5
+
+    E(g[[i]])$head_group <- head_group
+    E(g[[i]])$tail_group <- tail_group
   }
 
   model$model$graphs <- g
 
   model
 
+}
+
+#' Return the ratio of weights of in-:out-group connections
+#' @param g graph for which to determine the ratio
+#' @param original_groups whether to use the original groups (\code{T}) or
+#'   assign groups based on biases in the current graph (\code{F})
+#' @return double representing the ratio of mean weights in the graph for all
+#'   agents
+#' @export
+groupRatio <- function(g, original_groups = T) {
+  a <- edge_attr(g)
+  a$sameGroup = a$head_group == a$tail_group
+  mean(a$weight[a$sameGroup]) / mean(a$weight[!a$sameGroup])
 }
 
 #' A neat string of the parameters for a model for inclusion in graphs
