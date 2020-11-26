@@ -144,32 +144,36 @@ runSimulation <- function(
 #'   \code{\link{runSimulation}} for details). Can also be a list of lists to
 #'   support custom function arguments
 #' @param cores number of cores to use in the cluster
-#' @param summaryFunction used to summarise each model after running. Takes the
-#'   completed model as its argument.
+#' @param summaryFun used to summarise each model after running. Takes the
+#'   completed model as its argument. Parallelised, so must load necessary
+#'   libraries etc. explicitly.
 #' @inheritDotParams parallel::makeCluster
 #'
-#' @importFrom parallel makeCluster stopCluster parLapply
+#' @importFrom parallel makeCluster stopCluster parApply parLapply clusterExport
 #'
 #' @export
 runSimulations <- function(
   params,
   cores = parallel::detectCores(),
-  summaryFunction = function(model) model,
+  summaryFun = function(model) model,
   ...
   ) {
   # Unpack arguments and call runSimulation
   f <- function(p) {
     library(adviseR)
-    summaryFunction(do.call(runSimulation, as.list(p)))
+    summaryFun(do.call(runSimulation, as.list(p)))
   }
 
-  cl <- parallel::makeCluster(cores, ...)
+  cl <- makeCluster(cores, ...)
+  on.exit(stopCluster(cl), add = TRUE)
+  clusterExport(cl, 'summaryFun', envir = environment())
+
   if ('data.frame' %in% class(params)) {
-    out <- parallel::parApply(cl, params, 1, f)
+    out <- parApply(cl, params, 1, f)
   } else {
-    out <- parallel::parLapply(cl, params, f)
+    out <- parLapply(cl, params, f)
   }
-  parallel::stopCluster(cl)
+
   out
 }
 

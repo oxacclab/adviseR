@@ -7,7 +7,7 @@
 runSimulations(
   params,
   cores = parallel::detectCores(),
-  summaryFunction = function(model) model,
+  summaryFun = function(model) model,
   ...
 )
 }
@@ -18,8 +18,9 @@ support custom function arguments}
 
 \item{cores}{number of cores to use in the cluster}
 
-\item{summaryFunction}{used to summarise each model after running. Takes the
-completed model as its argument.}
+\item{summaryFun}{used to summarise each model after running. Takes the
+completed model as its argument. Parallelised, so must load necessary
+libraries etc. explicitly.}
 
 \item{...}{
   Arguments passed on to \code{\link[parallel:makeCluster]{parallel::makeCluster}}

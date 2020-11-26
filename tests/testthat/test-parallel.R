@@ -26,6 +26,21 @@ test_that('Simple parallel simulation', {
   )
 })
 
+test_that('Parallel with custom summary', {
+  params <- data.frame(
+    randomSeed = floor(pi * 1e6),
+    bias_volatility_mean = c(0, .05),
+    bias_volatility_sd = c(0, .01)
+  )
+  gr <- runSimulations(
+    params,
+    cores = 2,
+    summaryFun = function(model)
+      groupRatio(model$model$graphs[[length(model$model$graphs)]])
+  )
+  expect_gt(gr[1], gr[2])
+})
+
 if (F) {
   # Do this individually because parallel processing can't be trusted not to
   # use cached versions of the package

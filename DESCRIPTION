@@ -1,6 +1,6 @@
 Package: adviseR
 Title: Advice Exchange Network Modelling
-Version: 0.0.0.910
+Version: 0.0.0.920
 Authors@R: 
     person(given = "Matt",
            family = "Jaquiery",
