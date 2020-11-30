@@ -17,12 +17,16 @@ runSimulation(
   bias_volatility_sd = 0.01,
   confidence_slope_mean = 1,
   confidence_slope_sd = 0,
+  weighted_sampling_mean = 0,
+  weighted_sampling_sd = 0,
   starting_graph = NULL,
-  randomSeed = NA,
+  random_seed = NA,
+  random_seed_agents = NA,
+  random_seed_simulation = NA,
   truth_fun = function(model, d) stats::rnorm(1, 0, model$parameters$truth_sd),
   truth_sd = 0.5,
-  weighted_sampling = NA,
-  confidence_weighted = T
+  confidence_weighted = T,
+  model = NA
 )
 }
 \arguments{
@@ -62,10 +66,26 @@ avoid negative slopes.}
 
 \item{confidence_slope_sd}{standard deviation}
 
+\item{weighted_sampling_mean}{a non-zero value means agents choose who to
+seek advice from according to how likely they are to trust the advice. The
+weights are raised to the power of this value (so values > 1 make source
+selection more pronounced than advice weighting, and values < 1 make source
+selection less pronounced than advice weighting). Negative values will make
+agents actively seek out those they do not trust for advice.}
+
+\item{weighted_sampling_sd}{standard deviation}
+
 \item{starting_graph}{single number, vector, or n_agents-by-n_agents matrix
 of starting trust weights between agents. Coerced to numeric}
 
-\item{randomSeed}{the random seed to start the simulation with}
+\item{random_seed}{the random seed to start the simulation with. If set, this
+is used to generate the random seeds for agent construction and simulation
+(unless those seeds are explicitly specified). This means output is
+reproducible even if only this seed is set.}
+
+\item{random_seed_agents}{random seed for agent construction}
+
+\item{random_seed_simulation}{random seed for simulation}
 
 \item{truth_fun}{function taking the simulation and decision number as
 arguments and returning the true state of the world as a single number}
@@ -73,18 +93,18 @@ arguments and returning the true state of the world as a single number}
 \item{truth_sd}{standard deviation of the truth function that the agents use
 to calculate the probability of values given their biases.}
 
-\item{weighted_sampling}{a non-zero/NA value means agents choose who to seek
-advice from according to how likely they are to trust the advice. The
-weights are multiplied by this value (so values > 1 make source selection
-more pronounced than advice weighting, and values < 1 make source selection
-less pronounced than advice weighting). Negative values will make agents
-actively seek out those they do not trust for advice.}
-
 \item{confidence_weighted}{whether agents use their own confidence in initial
 decisions to weigh their updating of trust in other agents. If F, agents
 simply examine whether other agents agree (although this produces a cliff
 whereby slight agreement and slight disagreement produce results as
 different as extreme agreement and extreme disagreement).}
+
+\item{model}{if present as a data frame output similar to that produced by
+\code{\link{makeAgents}}, this model is used instead of being generated
+automatically. If this is specified, the other model parameters giving
+means and SDs for agent properties are for reference only, and the
+properties which describe the model (e.g. n_agents) should match the
+values extracted from this data frame.}
 }
 \value{
 a list with \itemize{

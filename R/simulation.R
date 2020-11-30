@@ -23,24 +23,36 @@
 #'   a probability of a categorical decision. \code{\link{abs}} is used to
 #'   avoid negative slopes.
 #' @param confidence_slope_sd standard deviation
+#' @param weighted_sampling_mean a non-zero value means agents choose who to
+#'   seek advice from according to how likely they are to trust the advice. The
+#'   weights are raised to the power of this value (so values > 1 make source
+#'   selection more pronounced than advice weighting, and values < 1 make source
+#'   selection less pronounced than advice weighting). Negative values will make
+#'   agents actively seek out those they do not trust for advice.
+#' @param weighted_sampling_sd standard deviation
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
 #'   of starting trust weights between agents. Coerced to numeric
-#' @param randomSeed the random seed to start the simulation with
+#' @param random_seed the random seed to start the simulation with. If set, this
+#'   is used to generate the random seeds for agent construction and simulation
+#'   (unless those seeds are explicitly specified). This means output is
+#'   reproducible even if only this seed is set.
+#' @param random_seed_agents random seed for agent construction
+#' @param random_seed_simulation random seed for simulation
 #' @param truth_fun function taking the simulation and decision number as
 #'   arguments and returning the true state of the world as a single number
 #' @param truth_sd standard deviation of the truth function that the agents use
 #'   to calculate the probability of values given their biases.
-#' @param weighted_sampling a non-zero/NA value means agents choose who to seek
-#'   advice from according to how likely they are to trust the advice. The
-#'   weights are multiplied by this value (so values > 1 make source selection
-#'   more pronounced than advice weighting, and values < 1 make source selection
-#'   less pronounced than advice weighting). Negative values will make agents
-#'   actively seek out those they do not trust for advice.
 #' @param confidence_weighted whether agents use their own confidence in initial
 #'   decisions to weigh their updating of trust in other agents. If F, agents
 #'   simply examine whether other agents agree (although this produces a cliff
 #'   whereby slight agreement and slight disagreement produce results as
 #'   different as extreme agreement and extreme disagreement).
+#' @param model if present as a data frame output similar to that produced by
+#'   \code{\link{makeAgents}}, this model is used instead of being generated
+#'   automatically. If this is specified, the other model parameters giving
+#'   means and SDs for agent properties are for reference only, and the
+#'   properties which describe the model (e.g. n_agents) should match the
+#'   values extracted from this data frame.
 #'
 #' @return a list with \itemize{
 #'  \item{"times"}{Timestamps associated with simulation stages.}
@@ -69,28 +81,70 @@ runSimulation <- function(
   bias_volatility_sd = .01,
   confidence_slope_mean = 1,
   confidence_slope_sd = 0,
+  weighted_sampling_mean = 0,
+  weighted_sampling_sd = 0,
   starting_graph = NULL,
-  randomSeed = NA,
+  random_seed = NA,
+  random_seed_agents = NA,
+  random_seed_simulation = NA,
   truth_fun = function(model, d) stats::rnorm(1, 0, model$parameters$truth_sd),
   truth_sd = .5,
-  weighted_sampling = NA,
-  confidence_weighted = T
+  confidence_weighted = T,
+  model = NA
 ) {
-
-  if (is.na(randomSeed))
-    randomSeed = round(runif(1, 1e6, 1e8))  # random random seed
+  # Set random seeds
+  if (is.na(random_seed))
+    random_seed <- round(runif(1, 1e6, 1e8))
 
   with_seed(
-    as.integer(randomSeed),
+    as.integer(random_seed),
     {
-      out <- list(
-        times = list(
-          start = Sys.time()
-        ),
-        parameters = list(
+      if (is.na(random_seed_agents))
+        random_seed_agents <- round(runif(1, 1e6, 1e8))  # random random seed
+      if (is.na(random_seed_simulation))
+        random_seed_simulation <- round(runif(1, 1e6, 1e8))
+    }
+  )
+
+  # Prepare output
+  out <- list(
+    times = list(
+      start = Sys.time()
+    ),
+    parameters = list(
+      n_agents = n_agents,
+      n_decisions = n_decisions,
+      decision_flags = recycle(decision_flags, n_decisions),
+      bias_mean = bias_mean,
+      bias_sd = bias_sd,
+      sensitivity_sd = sensitivity_sd,
+      trust_volatility_mean = trust_volatility_mean,
+      trust_volatility_sd = trust_volatility_sd,
+      bias_volatility_mean = bias_volatility_mean,
+      bias_volatility_sd = bias_volatility_sd,
+      confidence_slope_mean = confidence_slope_mean,
+      confidence_slope_sd = confidence_slope_sd,
+      weighted_sampling_mean = weighted_sampling_mean,
+      weighted_sampling_sd = weighted_sampling_sd,
+      starting_graph_type = class(starting_graph)[1],
+      starting_graph = starting_graph,
+      random_seed = random_seed,
+      random_seed_agents = random_seed_agents,
+      random_seed_simulation = random_seed_simulation,
+      truth_fun = truth_fun,
+      truth_sd = truth_sd,
+      confidence_weighted = as.logical(confidence_weighted)
+    )
+  )
+
+  with_seed(
+    as.integer(random_seed_agents),
+    {
+      # Construct the agents
+      if (all(is.na(model))) {
+        out$model <- makeAgents(
           n_agents = n_agents,
           n_decisions = n_decisions,
-          decision_flags = recycle(decision_flags, n_decisions),
           bias_mean = bias_mean,
           bias_sd = bias_sd,
           sensitivity_sd = sensitivity_sd,
@@ -100,34 +154,21 @@ runSimulation <- function(
           bias_volatility_sd = bias_volatility_sd,
           confidence_slope_mean = confidence_slope_mean,
           confidence_slope_sd = confidence_slope_sd,
-          starting_graph_type = class(starting_graph)[1],
-          starting_graph = starting_graph,
-          randomSeed = .Random.seed[length(.Random.seed)],
-          truth_fun = truth_fun,
-          truth_sd = truth_sd,
-          weighted_sampling = weighted_sampling,
-          confidence_weighted = as.logical(confidence_weighted)
+          weighted_sampling_mean = weighted_sampling_mean,
+          weighted_sampling_sd = weighted_sampling_sd,
+          starting_graph = starting_graph
         )
-      )
+      } else {
+        out$model <- model
+      }
+    }
+  )
 
-      # Construct the agents
-      out$model <- makeAgents(
-        n_agents = n_agents,
-        n_decisions = n_decisions,
-        bias_mean = bias_mean,
-        bias_sd = bias_sd,
-        sensitivity_sd = sensitivity_sd,
-        trust_volatility_mean = trust_volatility_mean,
-        trust_volatility_sd = trust_volatility_sd,
-        bias_volatility_mean = bias_volatility_mean,
-        bias_volatility_sd = bias_volatility_sd,
-        confidence_slope_mean = confidence_slope_mean,
-        confidence_slope_sd = confidence_slope_sd,
-        starting_graph = starting_graph
-      )
+  out$times$agentsCreated <- Sys.time()
 
-      out$times$agentsCreated <- Sys.time()
-
+  with_seed(
+    as.integer(random_seed_simulation),
+    {
       # Run the model
       for (d in 1:n_decisions)
         out <- simulationStep(out, d)
@@ -217,7 +258,7 @@ simulationStep <- function(model, d) {
 
   # Select advisor
   agents$advisor <-
-    selectAdvisor(model$model$graphs[[d]], model$parameters$weighted_sampling)
+    selectAdvisor(model$model$graphs[[d]], agents$weighted_sampling)
 
   agents$weight <- diag(model$model$graphs[[d]][, agents$advisor])
 
@@ -291,15 +332,11 @@ getConfidence <- function(agents, truth_sd) {
 #' Return the advisor selections based on \code{graph}
 #' @param graph weighted trust matrix for agents
 #' @param exponent power to which trust weights are raised for probabilistic
-#'   selection; NA or 0 means selection is equally weighted
+#'   selection; 0 means selection is equally weighted
 #' @return vector of the advisor id selected by each agent
-selectAdvisor <- function(graph, exponent = 1) {
-  # pick an advisor
-  if (is.na(exponent) || exponent == 0) {
-    probabilities <- matrix(1, nrow = nrow(graph), ncol = ncol(graph))
-  } else {
-    probabilities <- graph ^ exponent
-  }
+selectAdvisor <- function(graph, exponent = 0) {
+  # Weight trust matrix by exponent
+  probabilities <- graph ^ exponent
   # never ask yourself - set diag to just below minimum value
   # this approach supports negative values of exponent without self-seeking
   diag(probabilities) <- apply(probabilities, 1, min) - .0001

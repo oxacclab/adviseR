@@ -8,7 +8,7 @@ test_that('Simple parallel simulation', {
   params <- data.frame(
     bias_volatility_mean = c(0, .05, 0),
     bias_volatility_sd = c(0, .01, 0),
-    randomSeed = floor(pi * 1e6),
+    random_seed = floor(pi * 1e6),
     confidence_weighted = c(T, T, F)
   )
   models <- runSimulations(params, cores = 2, outfile = paste0(tempfile(), '.log'))
@@ -28,7 +28,7 @@ test_that('Simple parallel simulation', {
 
 test_that('Parallel with custom summary', {
   params <- data.frame(
-    randomSeed = floor(pi * 1e6),
+    random_seed = floor(pi * 1e6),
     bias_volatility_mean = c(0, .05),
     bias_volatility_sd = c(0, .01)
   )

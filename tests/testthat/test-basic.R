@@ -1,9 +1,33 @@
 context('Basic functionality')
 library(adviseR)
+library(igraph)
 
 test_that('Simple simulation', {
   load('data/bias-model.rda')
-  model <- runSimulation(randomSeed = floor(pi * 1e6))
+  model <- runSimulation(random_seed = floor(pi * 1e6))
+  # Can't do a simple identical check because $timings will be different,
+  # and $graphs have different ids (presumably to avoid conflicts)
+  expect_equal(model$parameters, bias.model$parameters)
+  expect_equal(model$model$agents, bias.model$model$agents)
+})
+
+test_that('Custom model specification', {
+  load('data/bias-model.rda')
+  model <- runSimulation(
+    model = list(
+      agents = bias.model$model$agents,
+      graphs = list(
+        t(as_adjacency_matrix(
+          bias.model$model$graphs[[1]],
+          attr = 'weight',
+          sparse = F
+        ))
+      )
+    ),
+    random_seed_simulation = bias.model$parameters$random_seed_simulation,
+    random_seed = bias.model$parameters$random_seed,
+    random_seed_agents = bias.model$parameters$random_seed_agents
+  )
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
   expect_equal(model$parameters, bias.model$parameters)

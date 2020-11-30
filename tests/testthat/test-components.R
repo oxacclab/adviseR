@@ -60,27 +60,29 @@ test_that('getConfidence works', {
 })
 
 test_that('selectAdvisor works', {
-  g <- t(matrix(
+  g <- matrix(
     c(
       0, 1, 0,
       0, 0, 1,
       1, 0, 0
     ),
     nrow = 3,
-    ncol = 3
-  ))
-  expect_equal(selectAdvisor(g), c(2, 3, 1))
+    ncol = 3,
+    byrow = T
+  )
+  expect_equal(selectAdvisor(g, exponent = 1), c(2, 3, 1))
   # Probabilistic
-  g <- t(matrix(
+  g <- matrix(
     c(
       0, .25, .5,
       .25, 0, .25,
       .5, 1, 0
     ),
     nrow = 3,
-    ncol = 3
-  ))
-  x <- sapply(1:10000, function(i) selectAdvisor(g))
+    ncol = 3,
+    byrow = T
+  )
+  x <- sapply(1:10000, function(i) selectAdvisor(g, exponent = 1))
   expect_equal(
     round(rowMeans(x), 1),
     round(
@@ -93,7 +95,7 @@ test_that('selectAdvisor works', {
     )
   )
   # Probablistic with exponent
-  y <- sapply(1:5000, function(i) selectAdvisor(g, 5))
+  y <- sapply(1:5000, function(i) selectAdvisor(g, exponent = 5))
   expect_equal(round(rowMeans(y), 1), c(3.0, 2.0, 2.0))
 })
 

@@ -5,7 +5,7 @@ library(igraph)
 test_that('Custom truth_fun', {
   load('data/truth_fun-model.rda')
   model <- runSimulation(
-    randomSeed = floor(pi * 1e6),
+    random_seed = floor(pi * 1e6),
     truth_fun = function(m, d) d %% 5 - 2,
     truth_sd = 1
   )
@@ -17,8 +17,9 @@ test_that('Weighted sampling', {
   model <- runSimulation(
     trust_volatility_mean = 0,
     trust_volatility_sd = 0, # no trust weight updating
-    weighted_sampling = 2,
-    randomSeed = floor(pi * 1e6)
+    weighted_sampling_mean = 2,
+    weighted_sampling_sd = .3,
+    random_seed = floor(pi * 1e6)
   )
 
   # Check counts of selection by weight
@@ -28,6 +29,41 @@ test_that('Weighted sampling', {
   )
   expect_lt(counts[1], counts[2])
   expect_lt(counts[2], counts[3])
+
+  # Check that higher values of weighted_sampling mean the agents are more picky
+  # and not that the agents are more picked!
+  agents <- data.frame(
+    id = 1:3,
+    decision = rep(1, each = 3),
+    sensitivity = .3,
+    trust_volatility = 0,
+    bias_volatility = 0,
+    weighted_sampling = 1:3,
+    bias = 0,
+    truth = NA_real_,
+    percept = NA_real_,
+    initial = NA_real_,
+    advisor = NA_integer_,
+    advice = NA_real_,
+    weight = NA_real_,
+    final = NA_real_,
+    confidence_slope = 1
+  )
+  trust <- matrix(c(
+    1e-4, .9, .1,
+    .9, 1e-4, .1,
+    .9, .1, 1e-4
+  ), 3, 3, byrow = T)
+  m <- list(
+    model = list(agents = agents, graphs = list(trust)),
+    parameters = model$parameters
+  )
+  m$parameters$n_agents <- 3
+  s <- simulationStep(m, 1)
+  expect_equal(
+    s$model$agents$advisor,
+    apply(trust, 1, function(x) which(x == max(x)))
+  )
 })
 
 test_that('Example thesis simulation', {
@@ -44,7 +80,7 @@ test_that('Example thesis simulation', {
     bias_volatility_mean = 0,
     bias_volatility_sd = .0,
     starting_graph = .1,
-    randomSeed = 20201014
+    random_seed = 20201014
   )
 
   # Can't do a simple identical check because $timings will be different,

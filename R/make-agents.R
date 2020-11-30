@@ -19,6 +19,13 @@
 #'   take their slopes for the sigmoid function mapping continuous evidence to
 #'   a probability of a categorical decision.
 #' @param confidence_slope_sd standard deviation
+#' @param weighted_sampling_mean a non-zero value means agents choose who to
+#'   seek advice from according to how likely they are to trust the advice. The
+#'   weights are raised to the power of this value (so values > 1 make source
+#'   selection more pronounced than advice weighting, and values < 1 make source
+#'   selection less pronounced than advice weighting). Negative values will make
+#'   agents actively seek out those they do not trust for advice.
+#' @param weighted_sampling_sd standard deviation
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
 #'   of starting trust weights between agents. Coerced to numeric
 #'
@@ -29,6 +36,7 @@
 #'  \item{"sensitivity"}{The agent's ability to do the task}
 #'  \item{"trust_volatility"}{How quickly the agent's trust updates}
 #'  \item{"bias_volatility"}{How quickly the agent's bias updates}
+#'  \item{"weighted_sampling"}{How heavily trust governs advice sampling behaviour}
 #'  \item{"bias"}{The agent's (initial) bias}
 #'  \item{"truth"}{The true state of the world (same for a given decision for all agents)}
 #'  \item{"initial"}{The agent's initial estimate of the truth}
@@ -57,6 +65,8 @@ makeAgents <- function(
   bias_volatility_sd = .01,
   confidence_slope_mean = 1,
   confidence_slope_sd = 0,
+  weighted_sampling_mean = 0,
+  weighted_sampling_sd = 0,
   starting_graph = NULL
 ) {
   bias <- sigmoid(rnorm(n_agents, bias_mean, bias_sd))
@@ -74,6 +84,10 @@ makeAgents <- function(
     ),
     bias_volatility = rep(
       rnorm(n_agents, bias_volatility_mean, bias_volatility_sd),
+      n_decisions
+    ),
+    weighted_sampling = rep(
+      rnorm(n_agents, weighted_sampling_mean, weighted_sampling_sd),
       n_decisions
     ),
     bias = rep(bias[order(bias)], n_decisions),
