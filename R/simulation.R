@@ -36,8 +36,8 @@
 #'   is used to generate the random seeds for agent construction and simulation
 #'   (unless those seeds are explicitly specified). This means output is
 #'   reproducible even if only this seed is set.
-#' @param random_seed_agents random seed for agent construction
-#' @param random_seed_simulation random seed for simulation
+#' @param .random_seed_agents random seed for agent construction
+#' @param .random_seed_simulation random seed for simulation
 #' @param truth_fun function taking the simulation and decision number as
 #'   arguments and returning the true state of the world as a single number
 #' @param truth_sd standard deviation of the truth function that the agents use
@@ -85,8 +85,8 @@ runSimulation <- function(
   weighted_sampling_sd = 0,
   starting_graph = NULL,
   random_seed = NA,
-  random_seed_agents = NA,
-  random_seed_simulation = NA,
+  .random_seed_agents = NA,
+  .random_seed_simulation = NA,
   truth_fun = function(model, d) stats::rnorm(1, 0, model$parameters$truth_sd),
   truth_sd = .5,
   confidence_weighted = T,
@@ -99,10 +99,10 @@ runSimulation <- function(
   with_seed(
     as.integer(random_seed),
     {
-      if (is.na(random_seed_agents))
-        random_seed_agents <- round(runif(1, 1e6, 1e8))  # random random seed
-      if (is.na(random_seed_simulation))
-        random_seed_simulation <- round(runif(1, 1e6, 1e8))
+      if (is.na(.random_seed_agents))
+        .random_seed_agents <- round(runif(1, 1e6, 1e8))  # random random seed
+      if (is.na(.random_seed_simulation))
+        .random_seed_simulation <- round(runif(1, 1e6, 1e8))
     }
   )
 
@@ -129,8 +129,8 @@ runSimulation <- function(
       starting_graph_type = class(starting_graph)[1],
       starting_graph = starting_graph,
       random_seed = random_seed,
-      random_seed_agents = random_seed_agents,
-      random_seed_simulation = random_seed_simulation,
+      .random_seed_agents = .random_seed_agents,
+      .random_seed_simulation = .random_seed_simulation,
       truth_fun = truth_fun,
       truth_sd = truth_sd,
       confidence_weighted = as.logical(confidence_weighted)
@@ -138,7 +138,7 @@ runSimulation <- function(
   )
 
   with_seed(
-    as.integer(random_seed_agents),
+    as.integer(.random_seed_agents),
     {
       # Construct the agents
       if (all(is.na(model))) {
@@ -167,7 +167,7 @@ runSimulation <- function(
   out$times$agentsCreated <- Sys.time()
 
   with_seed(
-    as.integer(random_seed_simulation),
+    as.integer(.random_seed_simulation),
     {
       # Run the model
       for (d in 1:n_decisions)

@@ -21,8 +21,8 @@ runSimulation(
   weighted_sampling_sd = 0,
   starting_graph = NULL,
   random_seed = NA,
-  random_seed_agents = NA,
-  random_seed_simulation = NA,
+  .random_seed_agents = NA,
+  .random_seed_simulation = NA,
   truth_fun = function(model, d) stats::rnorm(1, 0, model$parameters$truth_sd),
   truth_sd = 0.5,
   confidence_weighted = T,
@@ -83,9 +83,9 @@ is used to generate the random seeds for agent construction and simulation
 (unless those seeds are explicitly specified). This means output is
 reproducible even if only this seed is set.}
 
-\item{random_seed_agents}{random seed for agent construction}
+\item{.random_seed_agents}{random seed for agent construction}
 
-\item{random_seed_simulation}{random seed for simulation}
+\item{.random_seed_simulation}{random seed for simulation}
 
 \item{truth_fun}{function taking the simulation and decision number as
 arguments and returning the true state of the world as a single number}

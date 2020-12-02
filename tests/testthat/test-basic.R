@@ -24,9 +24,9 @@ test_that('Custom model specification', {
         ))
       )
     ),
-    random_seed_simulation = bias.model$parameters$random_seed_simulation,
+    .random_seed_simulation = bias.model$parameters$.random_seed_simulation,
     random_seed = bias.model$parameters$random_seed,
-    random_seed_agents = bias.model$parameters$random_seed_agents
+    .random_seed_agents = bias.model$parameters$.random_seed_agents
   )
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
