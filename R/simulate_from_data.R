@@ -1,3 +1,7 @@
+.onUnload <- function(libpath) {
+  library.dynam.unload("adviseR", libpath)
+}
+
 #' Simulate interactions based on specified data and parameters
 #' @param d tbl of data with columns 'advisorIndex', 'choice0', 'choice1',
 #'   'advisorAgrees', 'confidenceShift'
@@ -25,21 +29,13 @@ simulateFromData <- function(d, params, detailed_output = F) {
     ncol = length(unique(d$advisorIndex))
   )
 
-  # Mean agreement rate is used to balance agreeing/disagreeing advice. An
-  # alternative approach would be to have different update rates following
-  # dis/agreement
-  mean_agreement <- mean(d$advisorAgrees, na.rm = T)
-
   # Simulate the trust updating
-  for (i in 1:nrow(d)) {
-    # Update trust matrix for selected advisor and agreement
-    if (i != nrow(d)) {
-      trust[i + 1,] <- trust[i,]
-      trust[i + 1,][d$advisorIndex[i]] <-
-        trust[i,][d$advisorIndex[i]] +
-        params[["trustUpdateRate"]] * (d$advisorAgrees[i] - .5)
-    }
-  }
+  trust <- trustUpdate(
+    trust,
+    as.integer(d[["advisorIndex"]]),
+    as.numeric(d[["advisorAgrees"]]),
+    params[["trustUpdateRate"]]
+  )
 
   # Calculate errors
   # What's the probability the chosen advisor was chosen?
@@ -60,8 +56,7 @@ simulateFromData <- function(d, params, detailed_output = F) {
     is.na(d$advisorAgrees),
     NA_real_,
     {
-      predicted_update <-
-        (d$advisorAgrees - mean_agreement) * diag(trust[,d$advisorIndex])
+      predicted_update <- d$advisorAgrees * diag(trust[,d$advisorIndex])
       d$confidenceShift.z - predicted_update
     }
   )
