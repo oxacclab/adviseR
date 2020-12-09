@@ -15,7 +15,6 @@ NumericMatrix trustUpdate(
     NumericVector advisorAgrees,
     double updateRate
 ) {
-  return trust;
   int nRow = trust.nrow();
   int nCol = trust.ncol();
   LogicalVector missingAdvice = is_na(advisorAgrees);

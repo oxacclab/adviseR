@@ -151,3 +151,12 @@ test_that('newWeights works', {
   expect_lt(g[2, a$advisor[2]], w[2, a$advisor[2]])
   expect_lt(g[3, a$advisor[3]], w[3, a$advisor[3]])
 })
+
+test_that('trustUpdate does something', {
+  expect_error(
+    expect_equal(
+      trustUpdate(matrix(.3, nrow = 4, ncol = 1), rep(1, 4), rep(1, 4), 1),
+      matrix(.3, nrow = 4, ncol = 1)
+    )
+  )
+})

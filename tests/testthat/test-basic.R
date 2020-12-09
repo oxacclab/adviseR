@@ -55,15 +55,15 @@ test_that('Sensitivity graph', {
 
 test_that('Simulate from data', {
   load('data/empirical_data.rda')
-  # m <- simulateFromData(empirical_data, data.frame(a = 1, b = 1), T)
-  # MSE <- c(
-  #   "Advisor choice mean squared error" =
-  #     mean(m$advisor_choice_error ^ 2, na.rm = T),
-  #   "Advice-taking mean squared error" =
-  #     mean(m$advice_taking_error ^ 2, na.rm = T)
-  # )
+  m <- simulateFromData(empirical_data, data.frame(a = 1, b = 1), T)
+  MSE <- c(
+    "Advisor choice mean squared error" =
+      mean(m$advisor_choice_error ^ 2, na.rm = T),
+    "Advice-taking mean squared error" =
+      mean(m$advice_taking_error ^ 2, na.rm = T)
+  )
   expect_equal(
-    length(simulateFromData(head(empirical_data), data.frame(a = 1, b = 1))),
-    2
+    simulateFromData(empirical_data, data.frame(a = 1, b = 1)),
+    MSE
   )
 })

@@ -27,8 +27,6 @@ library(adviseR)
 model <- runSimulation(
   n_agents = 6,
   n_decisions = 200,
-  conf = T,
-  bias_mean = 1,
   bias_sd = 1,
   sensitivity_sd = 1,
   trust_volatility_mean = .05,
@@ -54,9 +52,7 @@ We can use this for, among other things, examining the robustness of a simulatio
 params <- data.frame(
   n_agents = 6,
   n_decisions = 200,
-  conf = c(T, F),
-  bias_mean = 1,
-  bias_sd = 1,
+  bias_sd = c(0, 1),
   sensitivity_sd = 1,
   trust_volatility_mean = .05,
   trust_volatility_sd = .01,

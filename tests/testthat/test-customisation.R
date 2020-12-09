@@ -59,11 +59,13 @@ test_that('Weighted sampling', {
     parameters = model$parameters
   )
   m$parameters$n_agents <- 3
-  s <- simulationStep(m, 1)
-  expect_equal(
-    s$model$agents$advisor,
-    apply(trust, 1, function(x) which(x == max(x)))
-  )
+  # Do multiple runs so we can check pickiness and picked-ness
+  s <- NULL
+  for (i in 1:1000)
+    s <- rbind(s, simulationStep(m, 1)$model$agents)
+  s <- aggregate(advisor ~ id, mean, data = s)
+  s <- round(s, 1)
+  expect_equal(s, data.frame(id = 1:3, advisor = c(2.1, 1.0, 1.0)))
 })
 
 test_that('Example thesis simulation', {
