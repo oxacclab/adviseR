@@ -15,16 +15,17 @@ NumericMatrix trustUpdate(
     NumericVector advisorAgrees,
     double updateRate
 ) {
-  int nRow = trust.nrow();
-  int nCol = trust.ncol();
-  LogicalVector missingAdvice = is_na(advisorAgrees);
+  const int nRow = trust.nrow();
+  const int nCol = trust.ncol();
+  const LogicalVector missingAdvice = is_na(advisorAgrees);
+  NumericMatrix out = trust; // avoid in-place modification
 
   for(int r = 0; r < nRow - 1; r++) {
     for(int c = 0; c < nCol; c++) {
-      trust(r + 1, c) = trust(r, c);
+      out(r + 1, c) = out(r, c);
       if(advisorId[r] == c + 1 && !missingAdvice[r])
-        trust(r + 1, c) += updateRate * (advisorAgrees[r] - .5);
+        out(r + 1, c) += updateRate * (advisorAgrees[r] - .5);
     }
   }
-  return trust;
+  return out;
 }

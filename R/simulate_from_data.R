@@ -56,7 +56,7 @@ simulateFromData <- function(d, params, detailed_output = F) {
     is.na(d$advisorAgrees),
     NA_real_,
     {
-      predicted_update <- d$advisorAgrees * diag(trust[,d$advisorIndex])
+      predicted_update <- (d$advisorAgrees - .5) * diag(trust[,d$advisorIndex])
       d$confidenceShift.z - predicted_update
     }
   )
