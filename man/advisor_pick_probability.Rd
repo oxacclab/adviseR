@@ -3,7 +3,8 @@
 \name{advisor_pick_probability}
 \alias{advisor_pick_probability}
 \title{Return the probability that the picked advisor is picked over the unpicked
-advisor for given trust values}
+advisor for given trust values. Assumes a sigmoid picking behaviour with
+slope 1 applied to weighted picked vs unpicked trusts.}
 \usage{
 advisor_pick_probability(picked, unpicked, trust_vector, weight)
 }
@@ -21,5 +22,6 @@ probability picked advisor is picked over unpicked advisor
 }
 \description{
 Return the probability that the picked advisor is picked over the unpicked
-advisor for given trust values
+advisor for given trust values. Assumes a sigmoid picking behaviour with
+slope 1 applied to weighted picked vs unpicked trusts.
 }

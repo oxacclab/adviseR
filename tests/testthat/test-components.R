@@ -163,21 +163,21 @@ test_that('trustUpdate does something', {
 
 test_that('advisor_pick_probability works', {
   expect_equal(
-    advisor_pick_probability(
+    round(advisor_pick_probability(
       c(1, 2, 1, 3),
       c(2, 1, 3, 1),
       matrix(c(.5, 1, -.5), nrow = 4, ncol = 3, byrow = T),
       1
-    ),
-    c(1/3, 2/3, Inf, -Inf)
+    ), 2),
+    c(.44, .56, .62, .38)
   )
   expect_equal(
     round(advisor_pick_probability(
       c(1, 2, 1, 3),
       c(2, 1, 3, 1),
-      matrix(c(.5, 1, -.5), nrow = 4, ncol = 3, byrow = T),
+      matrix(c(5, 10, -5), nrow = 4, ncol = 3, byrow = T),
       5
     ), 2),
-    c(.03, .97, Inf, -Inf)
+    c(0, 1, 1, 0)
   )
 })
