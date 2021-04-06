@@ -169,7 +169,7 @@ test_that('advisor_pick_probability works', {
       matrix(c(.5, 1, -.5), nrow = 4, ncol = 3, byrow = T),
       1
     ), 2),
-    c(.44, .56, .62, .38)
+    c(.38, .62, .73, .27)
   )
   expect_equal(
     round(advisor_pick_probability(
@@ -179,5 +179,22 @@ test_that('advisor_pick_probability works', {
       5
     ), 2),
     c(0, 1, 1, 0)
+  )
+})
+
+test_that('advisor_pick_probability is symmetrical and supports -ve weights', {
+  expect_equal(
+    round(advisor_pick_probability(
+      c(1, 2, 1, 3),
+      c(2, 1, 3, 1),
+      matrix(c(.5, 1, -.5), nrow = 4, ncol = 3, byrow = T),
+      1
+    ), 2),
+    round(advisor_pick_probability(
+      c(2, 1, 3, 1),
+      c(1, 2, 1, 3),
+      matrix(c(.5, 1, -.5), nrow = 4, ncol = 3, byrow = T),
+      -1
+    ), 2)
   )
 })

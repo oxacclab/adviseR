@@ -75,12 +75,13 @@ simulateFromData <- function(d, params, detailed_output = F) {
 }
 
 #' Return the probability that the picked advisor is picked over the unpicked
-#' advisor for given trust values. Assumes a sigmoid picking behaviour with
-#' slope 1 applied to weighted picked vs unpicked trusts.
+#' advisor for given trust values. Assumes an adviseR::sigmoid picking behaviour
+#' with slope 3 applied to weighted picked vs unpicked trusts.
 #' @param picked the index in \code{trust_vector} of the picked advisor
 #' @param unpicked the index in \code{trust_vector} of the unpicked advisor
 #' @param trust_vector vector of subjective trust in advisors
-#' @param weight weighting parameter used as an exponent for trust values
+#' @param weight sigmoid slope governing steepness and direction of relationship
+#'   between trust difference and pick probability
 #'
 #' @importFrom dplyr mutate across
 #' @importFrom rlang .data
@@ -88,14 +89,8 @@ simulateFromData <- function(d, params, detailed_output = F) {
 #' @return probability picked advisor is picked over unpicked advisor
 advisor_pick_probability <- function(picked, unpicked, trust_vector, weight) {
   trusts <- data.frame(
-    p = diag(trust_vector[,picked]) ^ weight,
-    u = diag(trust_vector[,unpicked]) ^ weight
+    p = diag(trust_vector[,picked]),
+    u = diag(trust_vector[,unpicked])
   )
-  trusts <- mutate(
-    trusts,
-    min = pmin(.data$p, .data$u),
-    across(c(.data$p, .data$u), ~.-min, .names = "{col}_new"),
-    range = (.data$p_new + .data$u_new) / 2
-  )
-  sigmoid(trusts$p_new - trusts$range)
+  sigmoid((trusts$p - trusts$u), slope = weight)
 }

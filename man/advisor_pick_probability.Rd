@@ -3,8 +3,8 @@
 \name{advisor_pick_probability}
 \alias{advisor_pick_probability}
 \title{Return the probability that the picked advisor is picked over the unpicked
-advisor for given trust values. Assumes a sigmoid picking behaviour with
-slope 1 applied to weighted picked vs unpicked trusts.}
+advisor for given trust values. Assumes an adviseR::sigmoid picking behaviour
+with slope 3 applied to weighted picked vs unpicked trusts.}
 \usage{
 advisor_pick_probability(picked, unpicked, trust_vector, weight)
 }
@@ -15,13 +15,14 @@ advisor_pick_probability(picked, unpicked, trust_vector, weight)
 
 \item{trust_vector}{vector of subjective trust in advisors}
 
-\item{weight}{weighting parameter used as an exponent for trust values}
+\item{weight}{sigmoid slope governing steepness and direction of relationship
+between trust difference and pick probability}
 }
 \value{
 probability picked advisor is picked over unpicked advisor
 }
 \description{
 Return the probability that the picked advisor is picked over the unpicked
-advisor for given trust values. Assumes a sigmoid picking behaviour with
-slope 1 applied to weighted picked vs unpicked trusts.
+advisor for given trust values. Assumes an adviseR::sigmoid picking behaviour
+with slope 3 applied to weighted picked vs unpicked trusts.
 }

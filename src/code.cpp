@@ -24,7 +24,17 @@ NumericMatrix trustUpdate(
     for(int c = 0; c < nCol; c++) {
       out(r + 1, c) = out(r, c);
       if(advisorId[r] == c + 1 && !missingAdvice[r])
-        out(r + 1, c) += updateRate * (advisorAgrees[r] - .5);
+        /* This is the general integration equation used for e.g. advice
+         * integration in the models.
+         *
+         * T_t+1 = T_t * (1 - L) + AL
+         *
+         * Where T is the trust value at a given time, L is the learning rate,
+         * and A is 0 if the advisor disagrees and 1 if the advisor agrees.
+         * The function thus steps towards 0 or 1 by weighted average with the
+         * current value (weighted by the learning rate)
+         */
+        out(r + 1, c) = out(r, c) * (1 - updateRate) + updateRate * advisorAgrees[r];
     }
   }
   return out;
