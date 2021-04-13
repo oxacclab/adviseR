@@ -4,17 +4,19 @@
 \alias{simulateFromData}
 \title{Simulate interactions based on specified data and parameters}
 \usage{
-simulateFromData(d, params, detailed_output = F)
+simulateFromData(d, params, detailed_output = F, scale_width = 55)
 }
 \arguments{
 \item{d}{tbl of data with columns 'advisorIndex', 'choice0', 'choice1',
-'advisorAgrees', 'confidenceShift'}
+'advisorAgrees', 'initialConfidence', 'finalConfidence'}
 
-\item{params}{1x2 tbl of parameters 'confidence slope' and 'trust update
+\item{params}{1x2 tbl of parameters 'weighted selection' and 'trust update
 rate'}
 
 \item{detailed_output}{whether to return an augmented \code{d} tbl (\code{T})
 or a named numeric vector of Mean Squared Errors}
+
+\item{scale_width}{range of the confidence scale in either direction around 0}
 }
 \value{
 Mean Squared Error of simulation with parameters compared to
@@ -23,4 +25,20 @@ empirical data values or augmented \code{d} argument, depending on whether
 }
 \description{
 Simulate interactions based on specified data and parameters
+}
+\details{
+Given an appropriately-formatted tbl, advisor choice and influence
+values can be fitted against a model of advisor trust. The trust is updated
+using \code{adviseR::trustUpdate} for all trials, and then the choice and
+influence errors are calculated based on these underlying trust values.
+
+The advisor choice prediction is based on a sigmoid function where the two
+parameters are a 'weighted selection' provided by the user which governs
+the slope of the sigmoid, and the current difference in trust values
+between the advisors.
+
+The influence values are based on a Bayesian update rule where the
+confidence scale is considered to give the probability of correctness.
+Initial confidence and advisor reliability (trust) are used to calculate
+the final confidence.
 }
