@@ -44,7 +44,7 @@ simulateFromData <- function(
 
   # Starting trust picked to be about what we expect from judge-advisor system
   # literature. Could change this as a parameter later?
-  starting_trust <- .3
+  starting_trust <- .65
 
   # Set up initial trust matrix
   trust <- matrix(
@@ -70,25 +70,33 @@ simulateFromData <- function(
     mutate(advisor_choice_error = .data$mean_pick - .data$mean_pick_predicted)
 
   # What's the advice error?
-  d$advice_taking_error <- if_else(
-    is.na(d$advisorAgrees),
-    NA_real_,
-    {
-      # convert from scale to probability
-      c1 <- abs(d$initialConfidence / scale_width / 2) + .5
-      c2 <- abs(d$finalConfidence / scale_width / 2) + .5
-      # r is compressed to avoid div0 errors
-      r <- pmin(.95, pmax(.05, diag(trust[, d$advisorIndex])))
-      # handle dis/agreement
-      r <- if_else(d$advisorAgrees, r, 1 - r)
-      # Bayes update rule
-      # c1*r / (c1*r + (1-c1)(1-r))
-      c2.hat <- (c1 * r) / (c1 * r + (1 - c1) * (1 - r))
-      c2 - c2.hat
-    }
-  )
+  d <- d %>% mutate(
+    c1_scaled = abs(.data$initialConfidence / scale_width / 2) + .5,
+    c2_scaled = abs(.data$finalConfidence / scale_width / 2) + .5,
+    trust_compressed = pmin(.95, pmax(.05, diag(trust[, .data$advisorIndex]))),
+    reliability = if_else(d$advisorAgrees, .data$trust_compressed, 1 - .data$trust_compressed),
+    c2_hat_scaled = (.data$c1_scaled * .data$reliability) /
+      (.data$c1_scaled * .data$reliability + (1 - .data$c1_scaled) * (1 - .data$reliability)),
+    c2_hat = .data$c2_hat_scaled * scale_width * 2 - scale_width,
+    advice_taking_error = .data$c2_scaled - .data$c2_hat_scaled
+  ) %>%
+    mutate(across(
+      .cols = c(
+        .data$c1_scaled,
+        .data$c2_scaled,
+        .data$trust_compressed,
+        .data$reliability,
+        .data$c2_hat_scaled,
+        .data$c2_hat,
+        .data$advice_taking_error
+      ),
+      ~ if_else(is.na(.data$advisorAgrees), NA_real_, .))
+    )
 
-  if (detailed_output) return(d)
+
+  if (detailed_output) {
+    return(d)
+  }
 
   MSE <- c(
     mean(d$advisor_choice_error ^ 2, na.rm = T),
