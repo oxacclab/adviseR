@@ -72,7 +72,11 @@ simulateFromData <- function(
   # What's the advice error?
   d <- d %>% mutate(
     c1_scaled = abs(.data$initialConfidence / scale_width / 2) + .5,
-    c2_scaled = abs(.data$finalConfidence / scale_width / 2) + .5,
+    c2_scaled = if_else(
+      sign(.data$initialConfidence) == sign(.data$finalConfidence),
+      abs(.data$finalConfidence / scale_width / 2) + .5,
+      -abs(.data$finalConfidence / scale_width / 2) + .5
+    ),
     trust_compressed = pmin(.95, pmax(.05, diag(trust[, .data$advisorIndex]))),
     reliability = if_else(d$advisorAgrees, .data$trust_compressed, 1 - .data$trust_compressed),
     c2_hat_scaled = (.data$c1_scaled * .data$reliability) /
@@ -92,7 +96,6 @@ simulateFromData <- function(
       ),
       ~ if_else(is.na(.data$advisorAgrees), NA_real_, .))
     )
-
 
   if (detailed_output) {
     return(d)

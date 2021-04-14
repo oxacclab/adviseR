@@ -245,3 +245,17 @@ test_that('advisor_choice_error works', {
   expect_equal(e[,1], w[,1])
   expect_equal(e[,2], w[,2])
 })
+
+test_that('simulateFromData handles edge cases', {
+  x <- data.frame(
+    trialId = 1:10,
+    initialConfidence = c(4.634205, 17.412019, 5.862632, 22.983083, 4.005643, 37.059090, 52.996425, 40.619095, 46.110484, 8.600329),
+    finalConfidence = c(20.61316, 44.08938, 21.66968, 46.18767, 46.58179, -18.72473, 54.89270, 54.13611, 54.49334, 50.93247),
+    advisorIndex = c(2, 2, 1, 1, 1, 2, 1, 1, 1, 1),
+    choice0 = 1,
+    choice1 = 2,
+    advisorAgrees = c(T, T, T, T, T, F, T, T, T, T)
+  )
+  m <- simulateFromData(x, params = data.frame(a = 3, b = .5), detailed_output = T)
+  expect_equal(all(m$advice_taking_error < 1e-6), T)
+})
