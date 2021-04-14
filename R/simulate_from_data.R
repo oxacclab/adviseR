@@ -128,7 +128,10 @@ advisor_pick_probability <- function(picked, unpicked, trust_vector, weight) {
 }
 
 #' Wrapper for the C++ function advisorChoiceError
-#'
+#' @param d tbl to calculate advisor choice error for
+#' @param trust matrix of trust values for each trial
+#' @param weight slope of the advisor choice sigmoid function
+#' @param nBack number of trials to use for the running average
 advisor_choice_error <- function(d, trust, weight, nBack = 5) {
   out <- advisorChoiceError(
     trust, d[["advisorIndex"]], d[["choice0"]], d[["choice1"]], weight, nBack)

@@ -6,6 +6,15 @@
 \usage{
 advisor_choice_error(d, trust, weight, nBack = 5)
 }
+\arguments{
+\item{d}{tbl to calculate advisor choice error for}
+
+\item{trust}{matrix of trust values for each trial}
+
+\item{weight}{slope of the advisor choice sigmoid function}
+
+\item{nBack}{number of trials to use for the running average}
+}
 \description{
 Wrapper for the C++ function advisorChoiceError
 }

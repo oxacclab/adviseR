@@ -217,8 +217,8 @@ test_that('advisorChoiceError works', {
   expect_equal(
     round(e, 2),
     round(matrix(
-      c(NA_real_, 1, 1, 1, .5, .5, .67, .67, 1, .67, 1,
-        NA_real_, .5, .5, .57, .43, .43, .38, .69, .33, .69, .29),
+      c(NA_real_, 1, 1, 1, .25, .40, .60, .40, .80, .40, .60,
+        NA_real_, .5, .54, .57, .43, .41, .37, .67, .32, .70, .29),
       nrow = 11,
       ncol = 2
     ), 2)
