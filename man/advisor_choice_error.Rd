@@ -2,26 +2,10 @@
 % Please edit documentation in R/simulate_from_data.R
 \name{advisor_choice_error}
 \alias{advisor_choice_error}
-\title{To calculate this we take the proportion of the last 5 choice trials in
-which the advisor was chosen and compare it to the mean probability
-the advisor should be chosen over those 5 trials.}
+\title{Wrapper for the C++ function advisorChoiceError}
 \usage{
 advisor_choice_error(d, trust, weight, nBack = 5)
 }
-\arguments{
-\item{d}{tbl with advisorIndex, choice1, choice2}
-
-\item{trust}{matrix of subjective trust in advisors}
-
-\item{weight}{sigmoid slope to be passed onto \code{advisor_pick_probability}}
-
-\item{nBack}{number of trials back to consider for each running average}
-}
-\value{
-vector of error for real - predicted pick rate over the last nBack trials
-}
 \description{
-To calculate this we take the proportion of the last 5 choice trials in
-which the advisor was chosen and compare it to the mean probability
-the advisor should be chosen over those 5 trials.
+Wrapper for the C++ function advisorChoiceError
 }

@@ -198,3 +198,50 @@ test_that('advisor_pick_probability is symmetrical and supports -ve weights', {
     ), 2)
   )
 })
+
+test_that('advisorChoiceError works', {
+  trust <- matrix(
+    c(.3, .3, .4, .5, .5, .5, .5, .6, .6, .5, .5,
+      .3, .3, .3, .3, .4, .3, .2, .2, .3, .3, .2),
+    nrow = 11,
+    ncol = 2
+  )
+  x <- data.frame(
+    trialId = 1:11,
+    advisorIndex = c(rep(1, 4), rep(2, 3), rep(c(1, 2), 2)),
+    choice0 = c(NA_integer_, rep(c(1, 2), 5)),
+    choice1 = c(NA_integer_, rep(c(2, 1), 5))
+  )
+  slope = 3
+  e <- advisorChoiceError(trust, x$advisorIndex, x$choice0, x$choice1, slope)
+  expect_equal(
+    round(e, 2),
+    round(matrix(
+      c(NA_real_, 1, 1, 1, .5, .5, .67, .67, 1, .67, 1,
+        NA_real_, .5, .5, .57, .43, .43, .38, .69, .33, .69, .29),
+      nrow = 11,
+      ncol = 2
+    ), 2)
+  )
+})
+
+test_that('advisor_choice_error works', {
+  # This is a wrapper so it should give the same answer whether wrapped or unwrapped
+  trust <- matrix(
+    c(.3, .3, .4, .5, .5, .5, .5, .6, .6, .5, .5,
+      .3, .3, .3, .3, .4, .3, .2, .2, .3, .3, .2),
+    nrow = 11,
+    ncol = 2
+  )
+  x <- data.frame(
+    trialId = 1:11,
+    advisorIndex = c(rep(1, 4), rep(2, 3), rep(c(1, 2), 2)),
+    choice0 = c(NA_integer_, rep(c(1, 2), 5)),
+    choice1 = c(NA_integer_, rep(c(2, 1), 5))
+  )
+  slope = 3
+  e <- advisorChoiceError(trust, x$advisorIndex, x$choice0, x$choice1, slope)
+  w <- advisor_choice_error(x, trust, slope)
+  expect_equal(e[,1], w[,1])
+  expect_equal(e[,2], w[,2])
+})

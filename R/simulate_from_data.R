@@ -127,61 +127,13 @@ advisor_pick_probability <- function(picked, unpicked, trust_vector, weight) {
   sigmoid((trusts$p - trusts$u), slope = weight)
 }
 
-
-#' To calculate this we take the proportion of the last 5 choice trials in
-#' which the advisor was chosen and compare it to the mean probability
-#' the advisor should be chosen over those 5 trials.
-#' @param d tbl with advisorIndex, choice1, choice2
-#' @param trust matrix of subjective trust in advisors
-#' @param weight sigmoid slope to be passed onto \code{advisor_pick_probability}
-#' @param nBack number of trials back to consider for each running average
+#' Wrapper for the C++ function advisorChoiceError
 #'
-#' @importFrom dplyr %>% filter mutate if_else bind_rows
-#' @importFrom tibble rowid_to_column
-#' @importFrom rlang .data
-#' @importFrom utils tail
-#'
-#' @return vector of error for real - predicted pick rate over the last nBack trials
 advisor_choice_error <- function(d, trust, weight, nBack = 5) {
-  out <- NULL
-  d <- rowid_to_column(d)
-  for (t in d$rowid) {
-    # Select the last up to 5 rows where the current advisor was one of the choices
-    tmp <- d %>%
-      filter(.data$choice0 == .data$advisorIndex[t] |
-               .data$choice1 == .data$advisorIndex[t]) %>%
-      filter(.data$rowid <= t) %>%
-      tail(nBack + 1)
-    if (nrow(tmp) == 0) {
-      out <- bind_rows(
-        out,
-        tibble(mean_pick = NA_real_, mean_pick_predicted = NA_real_)
-      )
-    } else {
-      pickedAdvisor <- tail(tmp$advisorIndex, 1)
-      tmp <- tmp %>%
-        mutate(
-          otherId = if_else(
-            .data$choice0 == pickedAdvisor,
-            .data$choice1,
-            .data$choice0
-          ),
-          pickProb = advisor_pick_probability(
-            rep(pickedAdvisor, nrow(tmp)),
-            .data$otherId,
-            trust[.data$rowid,],
-            weight
-          ),
-          picked = .data$advisorIndex == pickedAdvisor
-        )
-      out <- bind_rows(
-        out,
-        tibble(
-          mean_pick = mean(tmp$picked),
-          mean_pick_predicted = mean(tmp$pickProb)
-        )
-      )
-    }
-  }
-  out
+  out <- advisorChoiceError(
+    trust, d[["advisorIndex"]], d[["choice0"]], d[["choice1"]], weight, nBack)
+  data.frame(
+    mean_pick = out[,1],
+    mean_pick_predicted = out[,2]
+  )
 }

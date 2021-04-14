@@ -12,3 +12,18 @@ trustUpdate <- function(trust, advisorId, advisorAgrees, updateRate) {
     .Call(`_adviseR_trustUpdate`, trust, advisorId, advisorAgrees, updateRate)
 }
 
+#' Calculate choice error averaged over the last 5 trials
+#' @param trust Matrix of trust values - dims = trials x advisors
+#' @param advisorIndex indices of chosen advisors
+#' @param choice0 indices of the advisor in the first choice slot
+#' @param choice1 indices of the advisor in the second choice slot
+#' @param slope slope of the sigmoid function
+#' @param nBack number of trials to look back. Looks at previous trials where
+#'   the advisorIndex advisor is in one of the choice slots.
+#'
+#' @return Matrix of mean pick rate for the advisorIndex advisor (column 1) and
+#'   mean predicted pick rate for that advisor (column 2)
+advisorChoiceError <- function(trust, advisorIndex, choice0, choice1, slope, nBack = 5L) {
+    .Call(`_adviseR_advisorChoiceError`, trust, advisorIndex, choice0, choice1, slope, nBack)
+}
+

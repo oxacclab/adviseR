@@ -39,3 +39,68 @@ NumericMatrix trustUpdate(
   }
   return out;
 }
+
+//' Calculate choice error averaged over the last 5 trials
+//' @param trust Matrix of trust values - dims = trials x advisors
+//' @param advisorIndex indices of chosen advisors
+//' @param choice0 indices of the advisor in the first choice slot
+//' @param choice1 indices of the advisor in the second choice slot
+//' @param slope slope of the sigmoid function
+//' @param nBack number of trials to look back. Looks at previous trials where
+//'   the advisorIndex advisor is in one of the choice slots.
+//'
+//' @return Matrix of mean pick rate for the advisorIndex advisor (column 1) and
+//'   mean predicted pick rate for that advisor (column 2)
+// [[Rcpp::export]]
+NumericMatrix advisorChoiceError(
+  NumericMatrix trust,
+  IntegerVector advisorIndex,
+  IntegerVector choice0,
+  IntegerVector choice1,
+  double slope,
+  int nBack = 5
+) {
+  const int nRow = trust.nrow();
+
+  NumericMatrix out(nRow, 2);
+
+  for(int t = 0; t < nRow; t++) {
+    // Register NA if there is no choice
+    bool okay = true;
+    if(IntegerVector::is_na(advisorIndex[t]) ||
+       IntegerVector::is_na(choice0[t]) ||
+       IntegerVector::is_na(choice1[t]))
+      okay = false;
+    else if(choice0[t] != advisorIndex[t] && choice1[t] != advisorIndex[t])
+      okay = false;
+    if(!okay) {
+      out(t, _) = NumericVector {NA_REAL, NA_REAL};
+      continue;
+    }
+    // Collect appropriate previous trials
+    NumericVector pick_probs;
+    NumericVector predictions;
+    for(int i = t; i >= 0 && i > t - nBack; i--) {
+      if(IntegerVector::is_na(advisorIndex[i]) ||
+         IntegerVector::is_na(choice0[i]) ||
+         IntegerVector::is_na(choice1[i]))
+        continue;
+      if(choice0[i] == advisorIndex[t] || choice1[i] == advisorIndex[t]) {
+        // Note whether our advisor was actually picked
+        pick_probs.push_front((double) (advisorIndex[i] == advisorIndex[t]));
+
+        // Calculate prediction based on sigmoid of trust differences
+        const double trustPicked = trust(i, advisorIndex[t] - 1);
+        const int otherIndex = choice0[i] == advisorIndex[t]? choice1[i] : choice0[i];
+        const double trustOther = trust(i, otherIndex - 1);
+        const double difference = trustPicked - trustOther;
+        const double pPickPicked = 1/(1 + exp(-difference * slope));
+        predictions.push_front(pPickPicked);
+      }
+    }
+
+    out(t, _) = NumericVector {mean(pick_probs), mean(predictions)};
+  }
+
+  return out;
+}
