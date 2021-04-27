@@ -70,6 +70,7 @@ simulateFromData <- function(
     mutate(advisor_choice_error = .data$mean_pick - .data$mean_pick_predicted)
 
   # What's the advice error?
+  # scaled values equate to the simulated data's 0-1 framing
   d <- d %>% mutate(
     c1_scaled = abs(.data$initialConfidence / scale_width / 2) + .5,
     c2_scaled = if_else(

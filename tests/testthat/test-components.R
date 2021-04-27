@@ -94,9 +94,28 @@ test_that('selectAdvisor works', {
       1
     )
   )
-  # Probablistic with exponent
+  # Probablistic with weighted selection
   y <- sapply(1:5000, function(i) selectAdvisor(g, exponent = 5))
   expect_equal(round(rowMeans(y), 1), c(3.0, 2.0, 2.0))
+})
+
+test_that('selectAdvisorSimple works', {
+  # Probabilistic
+  g <- matrix(
+    c(
+      0, .25, .5,
+      .25, 0, .25,
+      .5, 1, 0
+    ),
+    nrow = 3,
+    ncol = 3,
+    byrow = T
+  )
+  x <- sapply(1:10000, function(i) selectAdvisorSimple(g, weightedSelection = 0))
+  expect_equal(round(rowMeans(x), 1), c(2.5, 2.0, 1.5))
+  # Probablistic with weighted selection
+  y <- sapply(1:5000, function(i) selectAdvisorSimple(g, weightedSelection = 15))
+  expect_equal(round(rowMeans(y), 1), c(3.0, 2.0, 1.7))
 })
 
 test_that('weighted works', {
@@ -107,6 +126,20 @@ test_that('weighted works', {
   )
   out <- c(.5, 0, .75, .5, 1, 1)
   expect_equal(weighted(x$a, x$b, x$weights), out)
+})
+
+test_that('bayes() updating works', {
+  x <- data.frame(
+    i = c(.1, .1, .5, .5, .9, .9),
+    a = c(0, 1, 0, 1, 0, 1),
+    w = c(0, 1, 1, 1, 1, 0)
+  )
+  b <- bayes(x$i, x$a, x$w)
+  # Symmetry between agree|trust and disagree|distrust
+  expect_equal(b[1], b[2])
+  expect_equal(b[5], b[6])
+  # Symmetry over disagree|trust and 1-(agree|trust)
+  expect_equal(b[3], 1 - b[4])
 })
 
 test_that('adviceCompatibility works', {
@@ -150,6 +183,43 @@ test_that('newWeights works', {
   expect_gt(g[1, a$advisor[1]], w[1, a$advisor[1]])
   expect_lt(g[2, a$advisor[2]], w[2, a$advisor[2]])
   expect_lt(g[3, a$advisor[3]], w[3, a$advisor[3]])
+})
+
+test_that('newWeightsByDrift works', {
+  a <- data.frame(
+    id = 1:3,
+    initial = rep(.5, 3),
+    advice = c(1, 0, 1),
+    advisor = c(2, 3, 1),
+    trust_volatility = .2
+  )
+  g <- t(matrix(
+    c(
+      0, .75, 0,
+      0, 0, .75,
+      .75, 0, 0
+    ),
+    nrow = 3,
+    ncol = 3
+  ))
+  expect_equal(round(newWeights(a, g), 2), g)
+  # Update in the right direction
+  a <- data.frame(
+    id = 1:3,
+    initial = rep(.75, 3),
+    advice = c(0, 1, 1),
+    advisor = c(2, 3, 1),
+    trust_volatility = .2
+  )
+  w <- newWeights(a, g, confidence_weighted = F)
+  expect_gt(g[1, a$advisor[1]], w[1, a$advisor[1]])
+  expect_lt(g[2, a$advisor[2]], w[2, a$advisor[2]])
+  expect_lt(g[3, a$advisor[3]], w[3, a$advisor[3]])
+  # Confidence weighted updates in the right direction but not as much
+  wc <- newWeights(a, g)
+  expect_gt(wc[1, a$advisor[1]], w[1, a$advisor[1]])
+  expect_lt(wc[2, a$advisor[2]], w[2, a$advisor[2]])
+  expect_lt(wc[3, a$advisor[3]], w[3, a$advisor[3]])
 })
 
 test_that('trustUpdate does something', {

@@ -258,7 +258,7 @@ simulationStep <- function(model, d) {
 
   # Select advisor
   agents$advisor <-
-    selectAdvisor(model$model$graphs[[d]], agents$weighted_sampling)
+    selectAdvisorSimple(model$model$graphs[[d]], agents$weighted_sampling)
 
   agents$weight <- diag(model$model$graphs[[d]][, agents$advisor])
 
@@ -266,7 +266,8 @@ simulationStep <- function(model, d) {
   agents$advice <- round(agents$initial[agents$advisor]) # advice is 0 or 1
 
   # Final decision
-  agents$final <- weighted(agents$advice, agents$initial, agents$weight)
+  # agents$final <- weighted(agents$advice, agents$initial, agents$weight)
+  agents$final <- bayes(agents$advice, agents$initial, agents$weight)
 
   # Write output to the model
   model$model$agents[rows, ] <- agents
@@ -282,7 +283,7 @@ simulationStep <- function(model, d) {
     # Updating weights
     if (bitwAnd(model$parameters$decision_flags[d], 1) == 1) {
       model$model$graphs[[d + 1]] <-
-        newWeights(
+        newWeightsByDrift(
           agents,
           model$model$graphs[[d]],
           model$parameters$confidence_weighted
@@ -349,6 +350,28 @@ selectAdvisor <- function(graph, exponent = 0) {
   )
 }
 
+#' Return the advisor selections based on \code{graph}
+#' @param graph weighted trust matrix for agents
+#' @param weightedSelection scaling for probabilistic selection; 0 means
+#' selection is equally weighted
+#' @details Weights the probability of selection of each advisor by using a
+#' sigmoid with slope = weightedSelection on the trust in that advisor
+#' @return vector of the advisor id selected by each agent
+selectAdvisorSimple <- function(graph, weightedSelection = 0) {
+  # Weight trust matrix by exponent
+  probabilities <- sigmoid(graph - .5, weightedSelection)
+  # never ask yourself - set diag to just below minimum value
+  # this approach supports negative values of exponent without self-seeking
+  diag(probabilities) <- 0
+  sapply(1:nrow(graph), function(i)
+    sample(
+      col(probabilities)[i, ], # ids are column numbers
+      size = 1,
+      prob = probabilities[i, ]
+    )
+  )
+}
+
 #' Weighted average where \code{a} uses \code{weight_a} and \code{b} uses
 #' \code{1 - weight_a}
 #' @param a numeric
@@ -356,6 +379,30 @@ selectAdvisor <- function(graph, exponent = 0) {
 #' @param weight_a weight given to a (1-\code{weight_a}) is used for \code{b}
 weighted <- function(a, b, weight_a) {
   a * weight_a + b * (1 - weight_a)
+}
+
+#' Bayesian integration where the reliability of the advisor is the probability
+#' the advisor agrees given we were correct.
+#' @param initial vector of initial decisions
+#' @param advice vector of advisory estimates
+#' @param weight trust rating for the advisor
+#' @param compression whether to limit extreme values to c(x,1-x)
+#' @details Uses a Bayesian integration formula where
+#' \deqn{c_2 = \frac{c_1 * t}{c_1 * t + (1-c_1)(1-t)}}{c2 = (c1*t)/(c1*t + (1-c1)(1-t))}
+#' \eqn{c_2}{c2} is the final confidence (returned as a vector), and \eqn{c_1}{c1} the initial
+#' confidence.
+#' \eqn{t} is the probability of the advisor's advice given the initial decision
+#' was correct. Where the advisor agrees, this is simply the trust we have in
+#' the advisor (an advisor we trusted 100% would always be expected to give the
+#' same answer we did). Where the advisor disagrees, this is the opposite (we
+#' consider it very unlikely a highly trusted advisor disagrees with us if we
+#' are right).
+bayes <- function(initial, advice, weight, compression = .05) {
+  if (compression) {
+    weight <- pmin(1 - compression, pmax(weight, compression))
+  }
+  weight <- ifelse(adviceAgrees(initial, advice), weight, 1 - weight)
+  (initial * weight) / (initial * weight + (1 - initial) * (1 - weight))
 }
 
 #' Return a measure of how compatible advice is with an initial decision
@@ -391,8 +438,6 @@ adviceAgrees <- function(initial, advice) {
 #' estimate, and in/decrease their trust according to that likelihood, scaled
 #' by each agent's trust_volatility.
 #'
-#' @importFrom stats pnorm
-#'
 #' @return Connectivity matrix of trust after accounting for agents' decisions
 newWeights <- function(agents, graph, confidence_weighted = T) {
   n_agents <- nrow(graph)
@@ -406,6 +451,41 @@ newWeights <- function(agents, graph, confidence_weighted = T) {
   W[(agents$advisor - 1) * n_agents + agents$id] <-
     W[(agents$advisor - 1) * n_agents + agents$id] +
     adviceAgree * agents$trust_volatility
+
+  err <- 1e-4
+
+  W <- pmax(err, pmin(1 - err, W)) # cap weights
+  W <- matrix(W, n_agents, n_agents)
+  diag(W) <- 0
+  W
+}
+
+#' Return the new trust matrix for agents using weighted drift towards 0/1
+#' @param agents tbl with a snapshot of agents at a given time
+#' @param graph connectivity matrix of trust
+#' @param confidence_weighted whether to use confidence to weight the updating or
+#'  instead rely only on dis/agreement
+#'
+#' @details Agents drift towards 0 or 1 trust according to whether or not the
+#' advisor agreed with them. This can be weighted by confidence, too, where the
+#' agreement matters more the more confident the agent was in their initial
+#' decision. This latter is accomplished by a second drift from the original
+#' trust rating to the prospective value.
+#'
+#' @return Connectivity matrix of trust after accounting for agents' decisions
+newWeightsByDrift <- function(agents, graph, confidence_weighted = T) {
+  n_agents <- nrow(graph)
+  adviceAgree <- ifelse((agents$advice < .5) == (agents$initial < .5), 1, 0)
+  W <- as.vector(graph)
+  m <- (agents$advisor - 1) * n_agents + agents$id
+  x <- W[m] * (1 - agents$trust_volatility) + adviceAgree * agents$trust_volatility
+
+  if (confidence_weighted) {
+    conf <- abs(agents$initial - .5)
+    W[m] <- x * conf + (W[m] * (1 - conf))
+  } else {
+    W[m] <- x
+  }
 
   err <- 1e-4
 

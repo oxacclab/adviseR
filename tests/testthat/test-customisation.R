@@ -38,7 +38,7 @@ test_that('Weighted sampling', {
     sensitivity = .3,
     trust_volatility = 0,
     bias_volatility = 0,
-    weighted_sampling = 1:3,
+    weighted_sampling = c(1, 5, 25),
     bias = 0,
     truth = NA_real_,
     percept = NA_real_,
@@ -50,9 +50,9 @@ test_that('Weighted sampling', {
     confidence_slope = 1
   )
   trust <- matrix(c(
-    1e-4, .9, .1,
-    .9, 1e-4, .1,
-    .9, .1, 1e-4
+    0, .9, .1,
+    .9, 0, .1,
+    .9, .1, 0
   ), 3, 3, byrow = T)
   m <- list(
     model = list(agents = agents, graphs = list(trust)),
@@ -61,11 +61,12 @@ test_that('Weighted sampling', {
   m$parameters$n_agents <- 3
   # Do multiple runs so we can check pickiness and picked-ness
   s <- NULL
+  set.seed(floor(pi * 1e6))
   for (i in 1:1000)
     s <- rbind(s, simulationStep(m, 1)$model$agents)
   s <- aggregate(advisor ~ id, mean, data = s)
   s <- round(s, 1)
-  expect_equal(s, data.frame(id = 1:3, advisor = c(2.1, 1.0, 1.0)))
+  expect_equal(s, data.frame(id = 1:3, advisor = c(2.4, 1.2, 1.0)))
 })
 
 test_that('Example thesis simulation', {
