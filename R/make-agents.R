@@ -69,7 +69,7 @@ makeAgents <- function(
   weighted_sampling_sd = 0,
   starting_graph = NULL
 ) {
-  bias <- sigmoid(rnorm(n_agents, bias_mean, bias_sd))
+  bias <- sigmoid(rnorm(n_agents, sign(runif(n_agents) - .5) * bias_mean, bias_sd))
 
   agents <- tibble(
     id = rep(1:n_agents, n_decisions),

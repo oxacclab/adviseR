@@ -8,7 +8,7 @@ test_that('Simple parallel simulation', {
   params <- data.frame(
     bias_volatility_mean = c(0, .05, 0),
     bias_volatility_sd = c(0, .01, 0),
-    random_seed = floor(pi * 1e6),
+    random_seed = floor(pi * 1e8),
     confidence_weighted = c(T, T, F)
   )
   models <- runSimulations(params, cores = 2, outfile = paste0(tempfile(), '.log'))

@@ -114,7 +114,7 @@ test_that('selectAdvisorSimple works', {
   x <- sapply(1:10000, function(i) selectAdvisorSimple(g, weightedSelection = 0))
   expect_equal(round(rowMeans(x), 1), c(2.5, 2.0, 1.5))
   # Probablistic with weighted selection
-  y <- sapply(1:5000, function(i) selectAdvisorSimple(g, weightedSelection = 15))
+  y <- sapply(1:10000, function(i) selectAdvisorSimple(g, weightedSelection = 15))
   expect_equal(round(rowMeans(y), 1), c(3.0, 2.0, 1.7))
 })
 
@@ -151,6 +151,25 @@ test_that('adviceCompatibility works', {
     adviceCompatibility(x$initial, x$advice),
     c(1, .75, .5, .25, 0, 1, .75, .25)
   )
+})
+
+test_that('getUpdatedBias works', {
+  x <- data.frame(
+    initial = c(0, .25, .5, .75, 1),
+    final = rep(.5, 5),
+    bias = rep(.5, 5),
+    bias_volatility = rep(.1, 5)
+  )
+  getUpdatedBias(x, slope = 1)
+
+  # Check changes of mind are updated appropriately
+  x <- data.frame(
+    initial = c(.25, .75),
+    final = c(.6, .4),
+    bias = c(.5, .5),
+    bias_volatility = c(.1, .1)
+  )
+  getUpdatedBias(x, slope = 1)
 })
 
 test_that('newWeights works', {
@@ -329,3 +348,4 @@ test_that('simulateFromData handles edge cases', {
   m <- simulateFromData(x, params = data.frame(a = 3, b = .5), detailed_output = T)
   expect_equal(all(m$advice_taking_error < 1e-6), T)
 })
+mean(c(6,7,5,6,3,7,4,10,4,8,6,5,6,9,6,8))

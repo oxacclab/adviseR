@@ -30,6 +30,8 @@
 #'   selection less pronounced than advice weighting). Negative values will make
 #'   agents actively seek out those they do not trust for advice.
 #' @param weighted_sampling_sd standard deviation
+#' @param bias_update_slope value used (for all agents) as the slope of the bias
+#'   update function
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
 #'   of starting trust weights between agents. Coerced to numeric
 #' @param random_seed the random seed to start the simulation with. If set, this
@@ -75,14 +77,15 @@ runSimulation <- function(
   bias_mean = 0,
   bias_sd = 1,
   sensitivity_sd = 1,
-  trust_volatility_mean = .05,
-  trust_volatility_sd = .01,
-  bias_volatility_mean = .05,
+  trust_volatility_mean = .1,
+  trust_volatility_sd = .025,
+  bias_volatility_mean = .025,
   bias_volatility_sd = .01,
   confidence_slope_mean = 1,
   confidence_slope_sd = 0,
   weighted_sampling_mean = 0,
   weighted_sampling_sd = 0,
+  bias_update_slope = 1,
   starting_graph = NULL,
   random_seed = NA,
   .random_seed_agents = NA,
@@ -126,6 +129,7 @@ runSimulation <- function(
       confidence_slope_sd = confidence_slope_sd,
       weighted_sampling_mean = weighted_sampling_mean,
       weighted_sampling_sd = weighted_sampling_sd,
+      bias_update_slope = bias_update_slope,
       starting_graph_type = class(starting_graph)[1],
       starting_graph = starting_graph,
       random_seed = random_seed,
@@ -267,7 +271,7 @@ simulationStep <- function(model, d) {
 
   # Final decision
   # agents$final <- weighted(agents$advice, agents$initial, agents$weight)
-  agents$final <- bayes(agents$advice, agents$initial, agents$weight)
+  agents$final <- bayes(agents$initial, agents$advice, agents$weight)
 
   # Write output to the model
   model$model$agents[rows, ] <- agents
@@ -277,7 +281,7 @@ simulationStep <- function(model, d) {
     if (bitwAnd(model$parameters$decision_flags[d], 2) == 2) {
       # Nudge bias towards observed (i.e. based on final decision) truth
       model$model$agents[rows + model$parameters$n_agents, "bias"] <-
-        weighted(agents$final, agents$bias, agents$bias_volatility)
+        getUpdatedBias(agents, model$parameters$bias_update_slope)
     }
 
     # Updating weights
@@ -360,8 +364,7 @@ selectAdvisor <- function(graph, exponent = 0) {
 selectAdvisorSimple <- function(graph, weightedSelection = 0) {
   # Weight trust matrix by exponent
   probabilities <- sigmoid(graph - .5, weightedSelection)
-  # never ask yourself - set diag to just below minimum value
-  # this approach supports negative values of exponent without self-seeking
+  # never ask yourself
   diag(probabilities) <- 0
   sapply(1:nrow(graph), function(i)
     sample(
@@ -426,6 +429,37 @@ adviceCompatibility <- function(initial, advice) {
 #' @param advice vector of advisory estimates
 adviceAgrees <- function(initial, advice) {
   (initial < .5) == (advice < .5)
+}
+
+#' Return vector of updated biases for agents
+#' @param agents tbl with a snapshot of agents at a given time
+#' @param slope slope of the sigmoid function run on influence
+#' @param limit clamp resulting bias to between limit and 1-limit
+#'
+#' @details Bias is calculated by feeding influence (difference between final
+#' and initial judgement) into a sigmoid function. This gives an amount of bias
+#' influence between -.5 and .5, for which we take the absolute value and
+#' subtract .5, giving a value between 0 and .5 which is around 0 for low levels
+#' of influence and rises rapidly to around .5 for higher influence levels.
+#' This bias influence is then scaled to between 0 and the agent's
+#' bias_volatility parameter (when bias influence is .5), and this is used as
+#' the amount the bias updates towards the final decision direction.
+#' The final value of the bias is clamped to avoid extreme values.
+getUpdatedBias <- function(agents, slope, limit = .05) {
+  newBias <- weighted(
+    round(agents$final),
+    agents$bias,
+    agents$bias_volatility
+  )
+
+  # Niccolo's approach
+  # influence = agents$final - agents$initial
+  # newBias <- agents$bias +
+  #   sign(agents$final - .5) *
+  #   abs(sigmoid(influence, slope) - .5) *
+  #   agents$bias_volatility
+
+  pmin(1 - limit, pmax(0 + limit, newBias))
 }
 
 #' Return the new trust matrix for agents

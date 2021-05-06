@@ -5,7 +5,7 @@ library(igraph)
 test_that('Custom truth_fun', {
   load('data/truth_fun-model.rda')
   model <- runSimulation(
-    random_seed = floor(pi * 1e6),
+    random_seed = floor(pi * 1e8),
     truth_fun = function(m, d) d %% 5 - 2,
     truth_sd = 1
   )
@@ -17,9 +17,9 @@ test_that('Weighted sampling', {
   model <- runSimulation(
     trust_volatility_mean = 0,
     trust_volatility_sd = 0, # no trust weight updating
-    weighted_sampling_mean = 2,
+    weighted_sampling_mean = 5,
     weighted_sampling_sd = .3,
-    random_seed = floor(pi * 1e6)
+    random_seed = floor(pi * 1e8)
   )
 
   # Check counts of selection by weight
@@ -61,12 +61,12 @@ test_that('Weighted sampling', {
   m$parameters$n_agents <- 3
   # Do multiple runs so we can check pickiness and picked-ness
   s <- NULL
-  set.seed(floor(pi * 1e6))
+  set.seed(floor(pi * 1e8))
   for (i in 1:1000)
     s <- rbind(s, simulationStep(m, 1)$model$agents)
   s <- aggregate(advisor ~ id, mean, data = s)
   s <- round(s, 1)
-  expect_equal(s, data.frame(id = 1:3, advisor = c(2.4, 1.2, 1.0)))
+  expect_equal(s, data.frame(id = 1:3, advisor = c(2.4, 1.3, 1.0)))
 })
 
 test_that('Example thesis simulation', {

@@ -11,14 +11,15 @@ runSimulation(
   bias_mean = 0,
   bias_sd = 1,
   sensitivity_sd = 1,
-  trust_volatility_mean = 0.05,
-  trust_volatility_sd = 0.01,
-  bias_volatility_mean = 0.05,
+  trust_volatility_mean = 0.1,
+  trust_volatility_sd = 0.025,
+  bias_volatility_mean = 0.025,
   bias_volatility_sd = 0.01,
   confidence_slope_mean = 1,
   confidence_slope_sd = 0,
   weighted_sampling_mean = 0,
   weighted_sampling_sd = 0,
+  bias_update_slope = 1,
   starting_graph = NULL,
   random_seed = NA,
   .random_seed_agents = NA,
@@ -74,6 +75,9 @@ selection less pronounced than advice weighting). Negative values will make
 agents actively seek out those they do not trust for advice.}
 
 \item{weighted_sampling_sd}{standard deviation}
+
+\item{bias_update_slope}{value used (for all agents) as the slope of the bias
+update function}
 
 \item{starting_graph}{single number, vector, or n_agents-by-n_agents matrix
 of starting trust weights between agents. Coerced to numeric}

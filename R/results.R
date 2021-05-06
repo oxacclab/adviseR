@@ -441,7 +441,10 @@ inspectModel <- function(m) {
   p <- weights %>%
     nest(d = -.data$group) %>%
     mutate(
-      p = map_dbl(.data$d, ~ t.test(weight ~ sameGroup, data = .)$p.value),
+      p = tryCatch(
+        map_dbl(.data$d, ~ t.test(weight ~ sameGroup, data = .)$p.value),
+        error = function(e) {NA_real_}
+      ),
       p = round(.data$p, 5)
     )
 
@@ -451,14 +454,17 @@ inspectModel <- function(m) {
 
     biasGraph = biasGraph(m),
 
-    aov = suppressWarnings({ezANOVA(
-      data = weights,
-      dv = quote(weight),
-      wid = quote(id),
-      within = quote(sameGroup),
-      between = quote(group),
-      type = 2
-    )$ANOVA}),
+    aov = tryCatch(
+      suppressWarnings({ezANOVA(
+        data = weights,
+        dv = quote(weight),
+        wid = quote(id),
+        within = quote(sameGroup),
+        between = quote(group),
+        type = 2
+      )$ANOVA}),
+      error = function(e) {NULL}
+    ),
 
     aovGraph = weights %>%
       ggplot(aes(x = .data$sameGroup, y = .data$weight,

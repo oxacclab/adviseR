@@ -4,7 +4,11 @@ library(igraph)
 
 test_that('Simple simulation', {
   load('data/bias-model.rda')
-  model <- runSimulation(random_seed = floor(pi * 1e6))
+  model <- runSimulation(
+    bias_volatility_mean = .05,
+    bias_volatility_sd = .01,
+    random_seed = floor(pi * 1e8)
+  )
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
   expect_equal(model$parameters, bias.model$parameters)
@@ -14,6 +18,8 @@ test_that('Simple simulation', {
 test_that('Custom model specification', {
   load('data/bias-model.rda')
   model <- runSimulation(
+    bias_volatility_mean = bias.model$parameters$bias_volatility_mean,
+    bias_volatility_sd = bias.model$parameters$bias_volatility_sd,
     model = list(
       agents = bias.model$model$agents,
       graphs = list(
