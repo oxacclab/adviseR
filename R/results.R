@@ -13,11 +13,11 @@ detailGraphs <- function(model) {
   head_group <- NULL; tail_group <- NULL
 
   for (i in 1:N$d) {
-    rows <- which(agents$decision == i)
+    A <- agents[agents$decision == i, ]
 
     active <- rep(0, N$p * N$p)
     # fill in colour for active advice (vectorised)
-    active[0:(N$p - 1) * N$p + agents$advisor[rows]] <- 'green'
+    active[0:(N$p - 1) * N$p + A$advisor] <- 'green'
 
     active <- matrix(active, N$p, N$p)
     active <- t(active)
@@ -28,26 +28,26 @@ detailGraphs <- function(model) {
     E(g[[i]])$active[active != 0] <- active[active != 0]
 
     # Sensitivity
-    E(g[[i]])$sensitivity <- agents$sensitivity[head_of(g[[i]], E(g[[i]]))]
+    E(g[[i]])$sensitivity <- A$sensitivity[head_of(g[[i]], E(g[[i]]))]
 
     # Bias difference
-    E(g[[i]])$headBias <- agents$bias[head_of(g[[i]], E(g[[i]]))]
-    E(g[[i]])$tailBias <- agents$bias[tail_of(g[[i]], E(g[[i]]))]
+    E(g[[i]])$headBias <- A$bias[head_of(g[[i]], E(g[[i]]))]
+    E(g[[i]])$tailBias <- A$bias[tail_of(g[[i]], E(g[[i]]))]
     E(g[[i]])$biasSimilarity <- 1 - abs(E(g[[i]])$headBias - E(g[[i]])$tailBias)
 
     # colour vertices by bias
-    V(g[[i]])$bias <- agents$bias[rows]
+    V(g[[i]])$bias <- A$bias
     V(g[[i]])$biasColour <- ifelse(
-      agents$bias[rows] > .5,
-      biasToColourString(agents$bias[rows], 'b'),
-      biasToColourString(1 - agents$bias[rows], 'r')
+      A$bias > .5,
+      biasToColourString(A$bias, 'b'),
+      biasToColourString(1 - A$bias, 'r')
     )
 
     # group at time 1
     if (is.null(head_group))
-      head_group <- agents$bias[head_of(g[[i]], E(g[[i]]))] > .5
+      head_group <- A$bias[head_of(g[[i]], E(g[[i]]))] > .5
     if (is.null(tail_group))
-      tail_group <- agents$bias[tail_of(g[[i]], E(g[[i]]))] > .5
+      tail_group <- A$bias[tail_of(g[[i]], E(g[[i]]))] > .5
 
     E(g[[i]])$head_group <- head_group
     E(g[[i]])$tail_group <- tail_group
@@ -68,7 +68,12 @@ detailGraphs <- function(model) {
 #' @export
 groupRatio <- function(g, original_groups = T) {
   a <- edge_attr(g)
-  a$sameGroup = a$head_group == a$tail_group
+  if (original_groups) {
+    a$sameGroup = a$head_group == a$tail_group
+  } else {
+    a$sameGroup = (a$headBias > .5) == (a$tailBias > .5)
+  }
+
   mean(a$weight[a$sameGroup]) / mean(a$weight[!a$sameGroup])
 }
 

@@ -45,6 +45,16 @@ test_that('Simulation network graphs', {
   expect_invisible(networkGraph(basic.model))
 })
 
+test_that('groupRatio works', {
+  load('data/bias-model.rda')
+  expect_error(
+    expect_equal(
+      groupRatio(bias.model$model$graph[[length(bias.model$model$graph)]]),
+      groupRatio(bias.model$model$graph[[length(bias.model$model$graph)]], F)
+    )
+  )
+})
+
 test_that('Bias graph', {
   load('data/basic-model.rda')
   gg <- biasGraph(basic.model)
