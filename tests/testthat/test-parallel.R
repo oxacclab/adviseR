@@ -28,7 +28,9 @@ test_that('Simple parallel simulation', {
 
 test_that('Parallel with custom summary', {
   params <- data.frame(
-    random_seed = floor(pi * 1e6),
+    n_agents = 24,
+    n_decisions = 100,
+    random_seed = floor(pi * 1e8),
     bias_volatility_mean = c(0, .05),
     bias_volatility_sd = c(0, .01)
   )
