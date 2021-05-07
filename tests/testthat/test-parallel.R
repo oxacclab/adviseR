@@ -40,7 +40,8 @@ test_that('Parallel with custom summary', {
     summaryFun = function(model)
       groupRatio(model$model$graphs[[length(model$model$graphs)]])
   )
-  expect_gt(gr[1], gr[2])
+  expect_equal(length(gr), 2)
+  expect_equal(all(is.numeric(gr) & is.finite(gr)), T)
 })
 
 if (F) {
