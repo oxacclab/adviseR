@@ -111,11 +111,11 @@ test_that('selectAdvisorSimple works', {
     ncol = 3,
     byrow = T
   )
-  x <- sapply(1:10000, function(i) selectAdvisorSimple(g, weightedSelection = 0))
+  x <- sapply(1:5000, function(i) selectAdvisorSimple(g, weightedSelection = 0))
   expect_equal(round(rowMeans(x), 1), c(2.5, 2.0, 1.5))
-  # Probablistic with weighted selection
-  y <- sapply(1:10000, function(i) selectAdvisorSimple(g, weightedSelection = 15))
-  expect_equal(round(rowMeans(y), 1), c(3.0, 2.0, 1.7))
+  # Probabilistic with weighted selection
+  y <- sapply(1:5000, function(i) selectAdvisorSimple(g, weightedSelection = 6))
+  expect_equal(round(rowMeans(y), 1), c(2.7, 2.0, 1.8))
 })
 
 test_that('weighted works', {
