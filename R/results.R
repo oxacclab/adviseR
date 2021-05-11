@@ -248,9 +248,9 @@ networkGraph <- function(model, timepoints = 2, ...) {
   for (d in 1:model$parameters$n_decisions) {
     tmp <- model$model$graphs[[d]]
     if (all(is.null(biases)) | !use_starting_bias)
-      biases <- as.numeric(tmp[attr = 'biasSimilarity'])
+      biases <- edge_attr(tmp, 'biasSimilarity')
 
-    test <- cor.test(biases, as.numeric(tmp[attr = 'weight']))
+    test <- cor.test(biases, edge_attr(tmp, 'weight'))
 
     cors <- rbind(cors, tibble(decision = d,
                                r = test$estimate,
@@ -272,7 +272,8 @@ networkGraph <- function(model, timepoints = 2, ...) {
 #' @importFrom rlang .data
 #' @export
 biasGraph <- function(model, use_starting_bias = F) {
-  cors <- .biasCorrelation(model, use_starting_bias = use_starting_bias)
+  cors <- .biasCorrelation(model, use_starting_bias = use_starting_bias) %>%
+    filter(!is.na(.data$r))
 
   # Plot correlation
   ggplot(cors, aes(x = .data$decision,

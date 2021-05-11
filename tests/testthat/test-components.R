@@ -348,4 +348,17 @@ test_that('simulateFromData handles edge cases', {
   m <- simulateFromData(x, params = data.frame(a = 3, b = .5), detailed_output = T)
   expect_equal(all(m$advice_taking_error < 1e-6), T)
 })
-mean(c(6,7,5,6,3,7,4,10,4,8,6,5,6,9,6,8))
+
+test_that('.biasCorrelation works', {
+  load('data/basic-model.rda')
+  load('data/bias-model.rda')
+  bc <- .biasCorrelation(basic.model)
+  expect_lt(max(bc$r), .8)
+  expect_equal(bc, .biasCorrelation(basic.model, T))
+  expect_error(
+    expect_equal(
+      .biasCorrelation(bias.model),
+      .biasCorrelation(bias.model, T)
+    )
+  )
+})
