@@ -63,7 +63,11 @@ agents actively seek out those they do not trust for advice.}
 \item{weighted_sampling_sd}{standard deviation}
 
 \item{starting_graph}{single number, vector, or n_agents-by-n_agents matrix
-of starting trust weights between agents. Coerced to numeric}
+of starting trust weights between agents. Coerced to numeric. Can also be
+a function taking the first generation of the agents tbl as an input and
+returning an n-by-n matrix of trust values between 0 and 1, where n is the
+number of agents, 0 represents completely untrustworthy, .5 random, and 1
+completely trustworthy.}
 }
 \value{
 \code{list(

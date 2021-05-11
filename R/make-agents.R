@@ -27,7 +27,12 @@
 #'   agents actively seek out those they do not trust for advice.
 #' @param weighted_sampling_sd standard deviation
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
-#'   of starting trust weights between agents. Coerced to numeric
+#'   of starting trust weights between agents. Coerced to numeric. Can also be
+#'   a function taking the first generation of the agents tbl as an input and
+#'   returning an n-by-n matrix of trust values between 0 and 1, where n is the
+#'   number of agents, 0 represents completely untrustworthy, .5 random, and 1
+#'   completely trustworthy.
+#'
 #'
 #' @details the \code{agents} tibble is an n_agents*n_decisions by 12 table with
 #' \itemize{
@@ -110,9 +115,13 @@ makeAgents <- function(
 
   if (!is.null(starting_graph)) {
     if (length(starting_graph) == 1) {
-      graph <- matrix(as.numeric(starting_graph), n_agents, n_agents)
+      if ('function' %in% class(starting_graph)) {
+        graph <- starting_graph(agents[agents$decision == 1, ])
+      } else {
+        graph <- matrix(as.numeric(starting_graph), n_agents, n_agents)
+      }
     } else {
-      graph <- matrix(as.numeric(starting_graph), n_agents, n_agents)
+      graph <- t(matrix(as.numeric(starting_graph), n_agents, n_agents))
     }
   } else {
     # Set up initial trust weights as .25, .5, .75 at random

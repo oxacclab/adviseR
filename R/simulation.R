@@ -33,7 +33,11 @@
 #' @param bias_update_slope value used (for all agents) as the slope of the bias
 #'   update function
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
-#'   of starting trust weights between agents. Coerced to numeric
+#'   of starting trust weights between agents. Coerced to numeric. Can also be
+#'   a function taking the first generation of the agents tbl as an input and
+#'   returning an n-by-n matrix of trust values between 0 and 1, where n is the
+#'   number of agents, 0 represents completely untrustworthy, .5 random, and 1
+#'   completely trustworthy.
 #' @param random_seed the random seed to start the simulation with. If set, this
 #'   is used to generate the random seeds for agent construction and simulation
 #'   (unless those seeds are explicitly specified). This means output is

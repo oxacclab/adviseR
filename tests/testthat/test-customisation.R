@@ -69,6 +69,41 @@ test_that('Weighted sampling', {
   expect_equal(s, data.frame(id = 1:3, advisor = c(2.4, 1.3, 1.0)))
 })
 
+test_that('Custom starting_graph works', {
+  m_dbl <- runSimulation(
+    n_agents = 6,
+    n_decisions = 2,
+    random_seed = floor(pi * 1e8),
+    starting_graph = 0.9
+  )
+  mat <- matrix(0.9, nrow = 6, ncol = 6)
+  diag(mat) <- 0
+  expect_equal(all(as.matrix(m_dbl$model$graphs[[1]][attr = 'weight']) == mat), T)
+
+  mat[upper.tri(mat)] <- .6
+  m_mat <- runSimulation(
+    n_agents = 6,
+    n_decisions = 2,
+    random_seed = floor(pi * 1e8),
+    starting_graph = mat
+  )
+  expect_equal(all(as.matrix(m_mat$model$graphs[[1]][attr = 'weight']) == mat), T)
+
+  m_fun <- runSimulation(
+    n_agents = 6,
+    n_decisions = 20,
+    weighted_sampling_mean = 50,
+    random_seed = floor(pi * 1e8),
+    starting_graph = function(a) {
+      # bias difference
+      bias <- matrix(a$bias, nrow = nrow(a), ncol = nrow(a))
+      x <- abs(bias - t(bias))
+      1 - (x / 2)
+    }
+  )
+  expect_equal(as.numeric(.biasCorrelation(m_fun)$r[1]), 1)
+})
+
 test_that('Example thesis simulation', {
   load('data/thesis-model.rda')
 
