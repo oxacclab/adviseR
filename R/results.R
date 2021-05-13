@@ -7,9 +7,7 @@ detailGraphs <- function(model) {
   agents <- model$model$agents
   N <- list(p = model$parameters$n_agents, d = model$parameters$n_decisions)
 
-  # transpose
-  g <- lapply(model$model$graphs, t)
-  g <- lapply(g, graph_from_adjacency_matrix, weighted = T)
+  g <- lapply(model$model$graphs, graph_from_adjacency_matrix, weighted = T)
   head_group <- NULL; tail_group <- NULL
 
   for (i in 1:N$d) {

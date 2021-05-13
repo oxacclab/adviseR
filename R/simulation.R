@@ -516,7 +516,7 @@ newWeights <- function(agents, graph, confidence_weighted = T) {
 #' @return Connectivity matrix of trust after accounting for agents' decisions
 newWeightsByDrift <- function(agents, graph, confidence_weighted = T) {
   n_agents <- nrow(graph)
-  adviceAgree <- ifelse((agents$advice < .5) == (agents$initial < .5), 1, 0)
+  adviceAgree <- ifelse(adviceAgrees(agents$initial, agents$advice), 1, 0)
   W <- as.vector(graph)
   m <- (agents$advisor - 1) * n_agents + agents$id
   x <- W[m] * (1 - agents$trust_volatility) + adviceAgree * agents$trust_volatility

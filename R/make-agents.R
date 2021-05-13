@@ -121,7 +121,7 @@ makeAgents <- function(
         graph <- matrix(as.numeric(starting_graph), n_agents, n_agents)
       }
     } else {
-      graph <- t(matrix(as.numeric(starting_graph), n_agents, n_agents))
+      graph <- matrix(as.numeric(starting_graph), n_agents, n_agents)
     }
   } else {
     # Set up initial trust weights as .25, .5, .75 at random
