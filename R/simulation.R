@@ -370,7 +370,7 @@ selectAdvisorSimple <- function(graph, weightedSelection = 0) {
   # Shift trust to centre around the mean (ignoring self)
   weight_max <- apply(graph, 1, max)
   # Weight trust matrix by exponent
-  probabilities <- sigmoid(graph - weight_max, weightedSelection)
+  probabilities <- 2 * sigmoid(graph - weight_max, weightedSelection)
   # never ask yourself
   diag(probabilities) <- 0
   sapply(1:nrow(graph), function(i)
