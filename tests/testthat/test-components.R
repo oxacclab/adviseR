@@ -114,8 +114,8 @@ test_that('selectAdvisorSimple works', {
   x <- sapply(1:5000, function(i) selectAdvisorSimple(g, weightedSelection = 0))
   expect_equal(round(rowMeans(x), 1), c(2.5, 2.0, 1.5))
   # Probabilistic with weighted selection
-  y <- sapply(1:5000, function(i) selectAdvisorSimple(g, weightedSelection = 6))
-  expect_equal(round(rowMeans(y), 1), c(2.7, 2.0, 1.8))
+  y <- sapply(1:5000, function(i) selectAdvisorSimple(g, weightedSelection = 5))
+  expect_equal(round(rowMeans(y), 1), c(2.7, 2.0, 1.9))
 })
 
 test_that('weighted works', {
@@ -160,16 +160,16 @@ test_that('getUpdatedBias works', {
     bias = rep(.5, 5),
     bias_volatility = rep(.1, 5)
   )
-  getUpdatedBias(x, slope = 1)
+  expect_equal(getUpdatedBias(x, slope = 1), rep(.45, 5))
 
-  # Check changes of mind are updated appropriately
+  # Check changes of mind are updated in the right direction
   x <- data.frame(
     initial = c(.25, .75),
     final = c(.6, .4),
     bias = c(.5, .5),
     bias_volatility = c(.1, .1)
   )
-  getUpdatedBias(x, slope = 1)
+  expect_equal(getUpdatedBias(x, slope = 1), c(.55, .45))
 })
 
 test_that('newWeights works', {

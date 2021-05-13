@@ -363,13 +363,14 @@ selectAdvisor <- function(graph, exponent = 0) {
 #' @param weightedSelection scaling for probabilistic selection; 0 means
 #' selection is equally weighted
 #' @details Weights the probability of selection of each advisor by using a
-#' sigmoid with slope = weightedSelection on the trust in that advisor
+#' half sigmoid with slope = weightedSelection on the trust in that advisor
+#' where the most preferred advisor has probability .5
 #' @return vector of the advisor id selected by each agent
 selectAdvisorSimple <- function(graph, weightedSelection = 0) {
   # Shift trust to centre around the mean (ignoring self)
-  weight_means <- apply(graph, 1, function(v) sum(v) / (length(v) - 1))
+  weight_max <- apply(graph, 1, max)
   # Weight trust matrix by exponent
-  probabilities <- sigmoid(graph - weight_means, weightedSelection)
+  probabilities <- sigmoid(graph - weight_max, weightedSelection)
   # never ask yourself
   diag(probabilities) <- 0
   sapply(1:nrow(graph), function(i)

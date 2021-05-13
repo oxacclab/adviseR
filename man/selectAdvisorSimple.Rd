@@ -20,5 +20,6 @@ Return the advisor selections based on \code{graph}
 }
 \details{
 Weights the probability of selection of each advisor by using a
-sigmoid with slope = weightedSelection on the trust in that advisor
+half sigmoid with slope = weightedSelection on the trust in that advisor
+where the most preferred advisor has probability .5
 }
