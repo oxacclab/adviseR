@@ -23,11 +23,11 @@ test_that('Custom model specification', {
     model = list(
       agents = bias.model$model$agents,
       graphs = list(
-        t(as_adjacency_matrix(
+        as_adjacency_matrix(
           bias.model$model$graphs[[1]],
           attr = 'weight',
           sparse = F
-        ))
+        )
       )
     ),
     .random_seed_simulation = bias.model$parameters$.random_seed_simulation,

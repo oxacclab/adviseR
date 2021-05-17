@@ -11,6 +11,7 @@
 #'   are drawn from normal distributions with mean +/- biasMean). Capped to
 #'   between 0 and 1, and represents the prior probability that the answer is 1.
 #' @param bias_sd standard deviation for the bias distribution
+#' @param sensitivity_mean mean for agents' sensitivity
 #' @param sensitivity_sd standard deviation for distribution of agents'
 #'   sensitivity (mean is 1)
 #' @param trust_volatility_mean the mean volatility of agents' trust
@@ -80,6 +81,7 @@ runSimulation <- function(
   decision_flags = 3,
   bias_mean = 0,
   bias_sd = 1,
+  sensitivity_mean = .5,
   sensitivity_sd = 1,
   trust_volatility_mean = .1,
   trust_volatility_sd = .025,
@@ -124,6 +126,7 @@ runSimulation <- function(
       decision_flags = recycle(decision_flags, n_decisions),
       bias_mean = bias_mean,
       bias_sd = bias_sd,
+      sensitivity_mean = sensitivity_mean,
       sensitivity_sd = sensitivity_sd,
       trust_volatility_mean = trust_volatility_mean,
       trust_volatility_sd = trust_volatility_sd,
@@ -155,6 +158,7 @@ runSimulation <- function(
           n_decisions = n_decisions,
           bias_mean = bias_mean,
           bias_sd = bias_sd,
+          sensitivity_mean = sensitivity_mean,
           sensitivity_sd = sensitivity_sd,
           trust_volatility_mean = trust_volatility_mean,
           trust_volatility_sd = trust_volatility_sd,

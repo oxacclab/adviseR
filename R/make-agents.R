@@ -8,6 +8,7 @@
 #'   sigmoid function to between 0 and 1, and represents the prior probability
 #'   that the answer is 1.
 #' @param bias_sd standard deviation for the bias distribution
+#' @param sensitivity_mean mean for agents' sensitivity
 #' @param sensitivity_sd standard deviation for distribution of agents'
 #'   sensitivity (mean is 1)
 #' @param trust_volatility_mean the mean volatility of agents' trust
@@ -63,6 +64,7 @@ makeAgents <- function(
   n_decisions = n_decisions,
   bias_mean = 0,
   bias_sd = 1,
+  sensitivity_mean = .5,
   sensitivity_sd = 1,
   trust_volatility_mean = .05,
   trust_volatility_sd = .01,
@@ -80,7 +82,7 @@ makeAgents <- function(
     id = rep(1:n_agents, n_decisions),
     decision = rep(1:n_decisions, each = n_agents),
     sensitivity = pmax(
-      abs(rep(rnorm(n_agents, 1, sensitivity_sd), n_decisions)),
+      abs(rep(rnorm(n_agents, sensitivity_mean, sensitivity_sd), n_decisions)),
       .00001
     ),
     trust_volatility = rep(

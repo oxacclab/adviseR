@@ -10,6 +10,7 @@ runSimulation(
   decision_flags = 3,
   bias_mean = 0,
   bias_sd = 1,
+  sensitivity_mean = 0.5,
   sensitivity_sd = 1,
   trust_volatility_mean = 0.1,
   trust_volatility_sd = 0.025,
@@ -47,6 +48,8 @@ are drawn from normal distributions with mean +/- biasMean). Capped to
 between 0 and 1, and represents the prior probability that the answer is 1.}
 
 \item{bias_sd}{standard deviation for the bias distribution}
+
+\item{sensitivity_mean}{mean for agents' sensitivity}
 
 \item{sensitivity_sd}{standard deviation for distribution of agents'
 sensitivity (mean is 1)}
