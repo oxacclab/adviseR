@@ -213,6 +213,15 @@ runSimulations <- function(
     summaryFun(do.call(runSimulation, as.list(p)))
   }
 
+  # Single core case, primarily for debugging
+  if (cores < 2) {
+    out <- list()
+    for (i in 1:nrow(params)) {
+      out[[i]] <- f(params[i, ])
+    }
+    return(out)
+  }
+
   cl <- makeCluster(cores, ...)
   on.exit(stopCluster(cl), add = TRUE)
   clusterExport(cl, 'summaryFun', envir = environment())
@@ -291,7 +300,7 @@ simulationStep <- function(model, d) {
     # Updating weights
     if (bitwAnd(model$parameters$decision_flags[d], 1) == 1) {
       model$model$graphs[[d + 1]] <-
-        newWeightsByDrift(
+        newWeights(
           agents,
           model$model$graphs[[d]],
           model$parameters$confidence_weighted
@@ -489,9 +498,8 @@ newWeights <- function(agents, graph, confidence_weighted = T) {
     adviceAgree <- adviceAgrees(agents$initial, agents$advice) - .5
 
   W <- as.vector(graph)
-  W[(agents$advisor - 1) * n_agents + agents$id] <-
-    W[(agents$advisor - 1) * n_agents + agents$id] +
-    adviceAgree * agents$trust_volatility
+  m <- (agents$advisor - 1) * n_agents + agents$id
+  W[m] <- W[m] + adviceAgree * agents$trust_volatility * 2
 
   err <- 1e-4
 

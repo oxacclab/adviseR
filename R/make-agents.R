@@ -114,6 +114,9 @@ makeAgents <- function(
   )
 
   if (!is.null(starting_graph)) {
+    if ('list' %in% class(starting_graph)) {
+      starting_graph <- starting_graph[[1]]
+    }
     if (length(starting_graph) == 1) {
       if ('function' %in% class(starting_graph)) {
         graph <- starting_graph(agents[agents$decision == 1, ])
