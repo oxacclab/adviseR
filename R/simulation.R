@@ -549,23 +549,41 @@ newWeightsByDrift <- function(agents, graph, confidence_weighted = T) {
   W
 }
 
-#' Return new trust matrix updating using Bayes rule
-newWeightsBayes <- function(agents, graph, confidence_weighted, compression = .05) {
-  if (!confidence_weighted)
-    return(newWeights(agents, graph, F))
-
+#' Return new trust matrix updating using Bayes rule to combine the current
+#' weight with the data from agreement. The agents' trust_volatility is used as
+#' the probability for the hypothesis (that the weight assigned to the advisor
+#' is correct).
+#' @param agents tbl with a snapshot of agents at a given time
+#' @param graph connectivity matrix of trust
+#' @param confidence_weighted wehther to use confidence to weight the updating
+#' or instead rely only on dis/agreement
+newWeightsBayes <- function(agents, graph, confidence_weighted) {
   n_agents <- nrow(graph)
   W <- as.vector(graph)
   m <- (agents$advisor - 1) * n_agents + agents$id
 
-  post <- bayes(agents$initial, agents$advice, agents$weight, compression)
-  # cap by trust_volatility
-  W[m] <- ifelse(
-    abs(W[m] - post) > agents$trust_volatility,
-    W[m] + agents$trust_volatility * sign(post - W[m]),
-    post
+  pAdvice <- 1 - agents$trust_volatility
+  curW <- ifelse(
+    adviceAgrees(agents$initial, agents$advice),
+    agents$weight,
+    1 - agents$weight
   )
+  curW <- agents$weight
+  post <- (curW * pAdvice) / (curW * pAdvice + (1 - curW) * (1 - pAdvice))
 
+  newTrust <- post * agents$weight + (1 - post) *
+    as.integer(adviceAgrees(agents$initial, agents$advice))
+
+  if (confidence_weighted) {
+    conf <- abs(agents$initial - .5)
+    W[m] <- newTrust * conf + (W[m] * (1 - conf))
+  } else {
+    W[m] <- newTrust
+  }
+
+  err <- 1e-4
+
+  W <- pmax(err, pmin(1 - err, W)) # cap weights
   W <- matrix(W, n_agents, n_agents)
   diag(W) <- 0
   W

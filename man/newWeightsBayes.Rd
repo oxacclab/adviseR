@@ -2,10 +2,24 @@
 % Please edit documentation in R/simulation.R
 \name{newWeightsBayes}
 \alias{newWeightsBayes}
-\title{Return new trust matrix updating using Bayes rule}
+\title{Return new trust matrix updating using Bayes rule to combine the current
+weight with the data from agreement. The agents' trust_volatility is used as
+the probability for the hypothesis (that the weight assigned to the advisor
+is correct).}
 \usage{
-newWeightsBayes(agents, graph, confidence_weighted, compression = 0.05)
+newWeightsBayes(agents, graph, confidence_weighted)
+}
+\arguments{
+\item{agents}{tbl with a snapshot of agents at a given time}
+
+\item{graph}{connectivity matrix of trust}
+
+\item{confidence_weighted}{wehther to use confidence to weight the updating
+or instead rely only on dis/agreement}
 }
 \description{
-Return new trust matrix updating using Bayes rule
+Return new trust matrix updating using Bayes rule to combine the current
+weight with the data from agreement. The agents' trust_volatility is used as
+the probability for the hypothesis (that the weight assigned to the advisor
+is correct).
 }
