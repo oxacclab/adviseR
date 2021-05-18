@@ -4,9 +4,9 @@
 #' @param n_agents number of agents to create
 #' @param n_decisions number of decisions
 #' @param bias_mean the mean for the agents' bias distribution (agents' biases
-#'   are drawn from normal distributions with mean +/- biasMean). Translated via
-#'   sigmoid function to between 0 and 1, and represents the prior probability
-#'   that the answer is 1.
+#'   are drawn from normal distributions with mean +/- bias_mean). Fed into a
+#'   sigmoid function and the capped to between 0 and 1. Represents the prior
+#'   probability that the answer is 1.
 #' @param bias_sd standard deviation for the bias distribution
 #' @param sensitivity_mean mean for agents' sensitivity
 #' @param sensitivity_sd standard deviation for distribution of agents'
@@ -64,7 +64,7 @@ makeAgents <- function(
   n_decisions = n_decisions,
   bias_mean = 0,
   bias_sd = 1,
-  sensitivity_mean = .5,
+  sensitivity_mean = 1,
   sensitivity_sd = 1,
   trust_volatility_mean = .05,
   trust_volatility_sd = .01,

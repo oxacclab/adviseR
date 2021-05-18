@@ -10,7 +10,7 @@ runSimulation(
   decision_flags = 3,
   bias_mean = 0,
   bias_sd = 1,
-  sensitivity_mean = 0.5,
+  sensitivity_mean = 1,
   sensitivity_sd = 1,
   trust_volatility_mean = 0.1,
   trust_volatility_sd = 0.025,
@@ -44,8 +44,9 @@ biases before allowing biases to update on the resulting trust network.
 Flag values are 1 = trust update; 2 = bias update. Defaults to all.}
 
 \item{bias_mean}{the mean for the agents' bias distribution (agents' biases
-are drawn from normal distributions with mean +/- biasMean). Capped to
-between 0 and 1, and represents the prior probability that the answer is 1.}
+are drawn from normal distributions with mean +/- bias_mean). Fed into a
+sigmoid function and the capped to between 0 and 1. Represents the prior
+probability that the answer is 1.}
 
 \item{bias_sd}{standard deviation for the bias distribution}
 

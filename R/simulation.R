@@ -8,8 +8,9 @@
 #'   biases before allowing biases to update on the resulting trust network.
 #'   Flag values are 1 = trust update; 2 = bias update. Defaults to all.
 #' @param bias_mean the mean for the agents' bias distribution (agents' biases
-#'   are drawn from normal distributions with mean +/- biasMean). Capped to
-#'   between 0 and 1, and represents the prior probability that the answer is 1.
+#'   are drawn from normal distributions with mean +/- bias_mean). Fed into a
+#'   sigmoid function and the capped to between 0 and 1. Represents the prior
+#'   probability that the answer is 1.
 #' @param bias_sd standard deviation for the bias distribution
 #' @param sensitivity_mean mean for agents' sensitivity
 #' @param sensitivity_sd standard deviation for distribution of agents'
@@ -81,7 +82,7 @@ runSimulation <- function(
   decision_flags = 3,
   bias_mean = 0,
   bias_sd = 1,
-  sensitivity_mean = .5,
+  sensitivity_mean = 1,
   sensitivity_sd = 1,
   trust_volatility_mean = .1,
   trust_volatility_sd = .025,
@@ -304,7 +305,7 @@ simulationStep <- function(model, d) {
     # Updating weights
     if (bitwAnd(model$parameters$decision_flags[d], 1) == 1) {
       model$model$graphs[[d + 1]] <-
-        newWeights(
+        newWeightsBayes(
           agents,
           model$model$graphs[[d]],
           model$parameters$confidence_weighted
@@ -543,6 +544,28 @@ newWeightsByDrift <- function(agents, graph, confidence_weighted = T) {
   err <- 1e-4
 
   W <- pmax(err, pmin(1 - err, W)) # cap weights
+  W <- matrix(W, n_agents, n_agents)
+  diag(W) <- 0
+  W
+}
+
+#' Return new trust matrix updating using Bayes rule
+newWeightsBayes <- function(agents, graph, confidence_weighted, compression = .05) {
+  if (!confidence_weighted)
+    return(newWeights(agents, graph, F))
+
+  n_agents <- nrow(graph)
+  W <- as.vector(graph)
+  m <- (agents$advisor - 1) * n_agents + agents$id
+
+  post <- bayes(agents$initial, agents$advice, agents$weight, compression)
+  # cap by trust_volatility
+  W[m] <- ifelse(
+    abs(W[m] - post) > agents$trust_volatility,
+    W[m] + agents$trust_volatility * sign(post - W[m]),
+    post
+  )
+
   W <- matrix(W, n_agents, n_agents)
   diag(W) <- 0
   W
