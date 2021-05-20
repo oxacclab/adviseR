@@ -535,7 +535,7 @@ newWeightsByDrift <- function(agents, graph, confidence_weighted = T) {
   x <- W[m] * (1 - agents$trust_volatility) + adviceAgree * agents$trust_volatility
 
   if (confidence_weighted) {
-    conf <- abs(agents$initial - .5)
+    conf <- abs(agents$initial - .5) * 2
     W[m] <- x * conf + (W[m] * (1 - conf))
   } else {
     W[m] <- x
@@ -557,6 +557,31 @@ newWeightsByDrift <- function(agents, graph, confidence_weighted = T) {
 #' @param graph connectivity matrix of trust
 #' @param confidence_weighted wehther to use confidence to weight the updating
 #' or instead rely only on dis/agreement
+#' @details The Bayesian integration uses 1 minus each agent's
+#' trust_volatility as the precision of their advisor trust. This is not
+#' hugely realistic, because it's very plausible that we may be more certain
+#' about how un/trustworthy one advisor is than another, and we could imagine
+#' that the precision of trustworthiness estimates would increase with greater
+#' experience with that advisor.
+#'
+#' The 1-trust_volatility is taken as P(H), and the P(D|H) is the probability
+#' of the received advice given that the initial answer was correct (which is
+#' assumed for the sake of simplicity). Where the advisor agrees, this is the
+#' weight placed on that advisor, and where the advisor disagrees this is 1
+#' minus that weight.
+#'
+#' Bayesian integration then gives P(H|D) = P(H)P(D|H)/(P(D|H) + P(D|¬H))
+#' which yields the posterior plausibility of current trust weight.
+#' The posterior plausibility of the current trust weight is then used as to
+#' weight the update from the current trust towards 1 or 0 depending upon
+#' whether the advisor agreed.
+#' This means that an advisor who offers quite surprising advice, and thus gets
+#' a low posterior trust weight plausibility will be updated quite dramatically
+#' in the direction of their agreement, while one whose advice is anticipated
+#' will get only a little change.
+#'
+#' In the confidence_weighted case, the final adjustment is weighted by the
+#' confidence in the initial answer.
 newWeightsBayes <- function(agents, graph, confidence_weighted) {
   n_agents <- nrow(graph)
   W <- as.vector(graph)
@@ -575,11 +600,16 @@ newWeightsBayes <- function(agents, graph, confidence_weighted) {
     as.integer(adviceAgrees(agents$initial, agents$advice))
 
   if (confidence_weighted) {
-    conf <- abs(agents$initial - .5)
-    W[m] <- newTrust * conf + (W[m] * (1 - conf))
-  } else {
-    W[m] <- newTrust
+    conf <- abs(agents$initial - .5) * 2
+    newTrust <- newTrust * conf + (W[m] * (1 - conf))
   }
+
+  # cap update by trust volatility
+  W[m] <- ifelse(
+    abs(W[m] - newTrust) > agents$trust_volatility,
+    W[m] + agents$trust_volatility * sign(newTrust - W[m]),
+    newTrust
+  )
 
   err <- 1e-4
 
