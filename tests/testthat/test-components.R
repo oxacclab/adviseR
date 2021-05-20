@@ -178,17 +178,18 @@ test_that('newWeights works', {
     initial = rep(.5, 3),
     advice = c(1, 0, 1),
     advisor = c(2, 3, 1),
-    trust_volatility = 5
+    trust_volatility = .1
   )
-  g <- t(matrix(
+  g <- matrix(
     c(
       0, .75, 0,
       0, 0, .75,
       .75, 0, 0
     ),
     nrow = 3,
-    ncol = 3
-  ))
+    ncol = 3,
+    byrow = T
+  )
   expect_equal(round(newWeights(a, g), 2), g)
   # Update in the right direction
   a <- data.frame(
@@ -196,7 +197,7 @@ test_that('newWeights works', {
     initial = rep(.75, 3),
     advice = c(0, 1, 1),
     advisor = c(2, 3, 1),
-    trust_volatility = 1
+    trust_volatility = .5
   )
   w <- newWeights(a, g)
   expect_gt(g[1, a$advisor[1]], w[1, a$advisor[1]])
@@ -353,7 +354,7 @@ test_that('.biasCorrelation works', {
   load('data/basic-model.rda')
   load('data/bias-model.rda')
   bc <- .biasCorrelation(basic.model)
-  expect_lt(max(bc$r), .8)
+  expect_lt(max(bc$r), .85)
   expect_equal(bc, .biasCorrelation(basic.model, T))
   expect_error(
     expect_equal(

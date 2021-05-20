@@ -305,7 +305,7 @@ simulationStep <- function(model, d) {
     # Updating weights
     if (bitwAnd(model$parameters$decision_flags[d], 1) == 1) {
       model$model$graphs[[d + 1]] <-
-        newWeightsBayes(
+        newWeights(
           agents,
           model$model$graphs[[d]],
           model$parameters$confidence_weighted
@@ -498,9 +498,9 @@ newWeights <- function(agents, graph, confidence_weighted = T) {
   n_agents <- nrow(graph)
 
   if (confidence_weighted)
-    adviceAgree <- adviceCompatibility(agents$initial, agents$advice) - .5
+    adviceAgree <- (adviceCompatibility(agents$initial, agents$advice) - .5) * 2
   else
-    adviceAgree <- adviceAgrees(agents$initial, agents$advice) - .5
+    adviceAgree <- (adviceAgrees(agents$initial, agents$advice) - .5) * 2
 
   W <- as.vector(graph)
   m <- (agents$advisor - 1) * n_agents + agents$id
