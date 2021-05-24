@@ -105,6 +105,7 @@ makeAgents <- function(
     advice = NA_real_,
     weight = NA_real_,
     final = NA_real_,
+    feedback = NA_real_,
     confidence_slope = rep(
       rnorm(n_agents, confidence_slope_mean, confidence_slope_sd),
       n_decisions

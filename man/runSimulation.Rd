@@ -21,6 +21,9 @@ runSimulation(
   weighted_sampling_mean = 0,
   weighted_sampling_sd = 0,
   bias_update_slope = 1,
+  feedback_probability = 0.05,
+  feedback_proportion = 1,
+  feedback_sd = 0,
   starting_graph = NULL,
   random_seed = NA,
   .random_seed_agents = NA,
@@ -82,6 +85,18 @@ agents actively seek out those they do not trust for advice.}
 
 \item{bias_update_slope}{value used (for all agents) as the slope of the bias
 update function}
+
+\item{feedback_probability}{the proportion of trials on which feedback
+occurs. Feedback is a broadcast signal revealing the true world value on a
+given trial (perhaps with some noise). All agents implicitly trust the
+feedback.}
+
+\item{feedback_proportion}{the proportion of agents to which feedback is
+given when it occurs}
+
+\item{feedback_sd}{the standard deviation of the noise around the feedback.
+If this value is non-zero, the same approximate value is given to all
+agents receiving feedback that round.}
 
 \item{starting_graph}{single number, vector, or n_agents-by-n_agents matrix
 of starting trust weights between agents. Coerced to numeric. Can also be

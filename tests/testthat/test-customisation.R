@@ -19,6 +19,7 @@ test_that('Weighted sampling', {
     trust_volatility_sd = 0, # no trust weight updating
     weighted_sampling_mean = 5,
     weighted_sampling_sd = .3,
+    feedback_probability = 0.0,
     random_seed = floor(pi * 1e8)
   )
 
@@ -66,7 +67,7 @@ test_that('Weighted sampling', {
     s <- rbind(s, simulationStep(m, 1)$model$agents)
   s <- aggregate(advisor ~ id, mean, data = s)
   s <- round(s, 1)
-  expect_equal(s, data.frame(id = 1:3, advisor = c(2.5, 1.2, 1.0)))
+  expect_equal(s, data.frame(id = 1:3, advisor = c(2.5, 1.1, 1.0)))
 })
 
 test_that('Custom starting_graph works', {
@@ -153,6 +154,18 @@ test_that('Trust update skipped with mask', {
       edge_attr(m$model$graphs[[1]], 'weight'),
       edge_attr(m$model$graphs[[200]], 'weight')
     )
+  )
+})
+
+test_that('Feedback forces agents towards 0 bias', {
+  random_seed <- 20210524
+  m <- runSimulation(feedback_probability = 0, random_seed = random_seed)
+  m_fb <- runSimulation(feedback_probability = 1, random_seed = random_seed)
+  m <- m$model$agents
+  m_fb <- m_fb$model$agents
+  expect_gt(
+    sum(m$bias[m$decision == max(m$decision)]),
+    sum(m_fb$bias[m_fb$decision == max(m_fb$decision)])
   )
 })
 

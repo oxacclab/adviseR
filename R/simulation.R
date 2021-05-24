@@ -34,6 +34,15 @@
 #' @param weighted_sampling_sd standard deviation
 #' @param bias_update_slope value used (for all agents) as the slope of the bias
 #'   update function
+#' @param feedback_probability the proportion of trials on which feedback
+#'   occurs. Feedback is a broadcast signal revealing the true world value on a
+#'   given trial (perhaps with some noise). All agents implicitly trust the
+#'   feedback.
+#' @param feedback_proportion the proportion of agents to which feedback is
+#'   given when it occurs
+#' @param feedback_sd the standard deviation of the noise around the feedback.
+#'   If this value is non-zero, the same approximate value is given to all
+#'   agents receiving feedback that round.
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
 #'   of starting trust weights between agents. Coerced to numeric. Can also be
 #'   a function taking the first generation of the agents tbl as an input and
@@ -93,6 +102,9 @@ runSimulation <- function(
   weighted_sampling_mean = 0,
   weighted_sampling_sd = 0,
   bias_update_slope = 1,
+  feedback_probability = .05,
+  feedback_proportion = 1.0,
+  feedback_sd = 0.0,
   starting_graph = NULL,
   random_seed = NA,
   .random_seed_agents = NA,
@@ -138,6 +150,9 @@ runSimulation <- function(
       weighted_sampling_mean = weighted_sampling_mean,
       weighted_sampling_sd = weighted_sampling_sd,
       bias_update_slope = bias_update_slope,
+      feedback_probability = feedback_probability,
+      feedback_proportion = feedback_proportion,
+      feedback_sd = feedback_sd,
       starting_graph_type = class(starting_graph)[1],
       starting_graph = starting_graph,
       random_seed = random_seed,
@@ -290,6 +305,13 @@ simulationStep <- function(model, d) {
   # Final decision
   # agents$final <- weighted(agents$advice, agents$initial, agents$weight)
   agents$final <- bayes(agents$initial, agents$advice, agents$weight)
+
+  if (runif(1) < model$parameters$feedback_probability) {
+    n_get_feedback <- round(nrow(agents) / model$parameters$feedback_proportion)
+    get_feedback <- sample(agents$id, n_get_feedback)
+    feedback <- rnorm(1, sd = model$parameters$feedback_sd)
+    agents$feedback[get_feedback] <- feedback
+  }
 
   # Write output to the model
   model$model$agents[rows, ] <- agents
@@ -468,7 +490,7 @@ adviceAgrees <- function(initial, advice) {
 #' The final value of the bias is clamped to avoid extreme values.
 getUpdatedBias <- function(agents, slope, limit = .05) {
   newBias <- weighted(
-    round(agents$final),
+    round(ifelse(is.na(agents$feedback), agents$final, agents$feedback)),
     agents$bias,
     agents$bias_volatility
   )
@@ -496,6 +518,11 @@ getUpdatedBias <- function(agents, slope, limit = .05) {
 #' @return Connectivity matrix of trust after accounting for agents' decisions
 newWeights <- function(agents, graph, confidence_weighted = T) {
   n_agents <- nrow(graph)
+  # use feedback if available
+  agents$initial <- ifelse(
+    is.na(agents$feedback),
+    agents$initial, round(agents$feedback)
+  )
 
   if (confidence_weighted)
     adviceAgree <- (adviceCompatibility(agents$initial, agents$advice) - .5) * 2
@@ -504,7 +531,7 @@ newWeights <- function(agents, graph, confidence_weighted = T) {
 
   W <- as.vector(graph)
   m <- (agents$advisor - 1) * n_agents + agents$id
-  W[m] <- W[m] + adviceAgree * agents$trust_volatility * 2
+  W[m] <- W[m] + adviceAgree * agents$trust_volatility
 
   err <- 1e-4
 
@@ -529,7 +556,13 @@ newWeights <- function(agents, graph, confidence_weighted = T) {
 #' @return Connectivity matrix of trust after accounting for agents' decisions
 newWeightsByDrift <- function(agents, graph, confidence_weighted = T) {
   n_agents <- nrow(graph)
+  # use feedback if available
+  agents$initial <- ifelse(
+    is.na(agents$feedback),
+    agents$initial, round(agents$feedback)
+  )
   adviceAgree <- ifelse(adviceAgrees(agents$initial, agents$advice), 1, 0)
+
   W <- as.vector(graph)
   m <- (agents$advisor - 1) * n_agents + agents$id
   x <- W[m] * (1 - agents$trust_volatility) + adviceAgree * agents$trust_volatility
@@ -584,6 +617,12 @@ newWeightsByDrift <- function(agents, graph, confidence_weighted = T) {
 #' confidence in the initial answer.
 newWeightsBayes <- function(agents, graph, confidence_weighted) {
   n_agents <- nrow(graph)
+  # use feedback if available
+  agents$initial <- ifelse(
+    is.na(agents$feedback),
+    agents$initial, round(agents$feedback)
+  )
+
   W <- as.vector(graph)
   m <- (agents$advisor - 1) * n_agents + agents$id
 

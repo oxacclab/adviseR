@@ -157,6 +157,7 @@ test_that('getUpdatedBias works', {
   x <- data.frame(
     initial = c(0, .25, .5, .75, 1),
     final = rep(.5, 5),
+    feedback = NA,
     bias = rep(.5, 5),
     bias_volatility = rep(.1, 5)
   )
@@ -166,6 +167,7 @@ test_that('getUpdatedBias works', {
   x <- data.frame(
     initial = c(.25, .75),
     final = c(.6, .4),
+    feedback = NA,
     bias = c(.5, .5),
     bias_volatility = c(.1, .1)
   )
@@ -178,6 +180,7 @@ test_that('newWeights works', {
     initial = rep(.5, 3),
     advice = c(1, 0, 1),
     advisor = c(2, 3, 1),
+    feedback = NA,
     trust_volatility = .1
   )
   g <- matrix(
@@ -197,6 +200,7 @@ test_that('newWeights works', {
     initial = rep(.75, 3),
     advice = c(0, 1, 1),
     advisor = c(2, 3, 1),
+    feedback = NA,
     trust_volatility = .5
   )
   w <- newWeights(a, g)
@@ -210,6 +214,7 @@ test_that('newWeightsByDrift works', {
     id = 1:3,
     initial = rep(.5, 3),
     advice = c(1, 0, 1),
+    feedback = NA,
     advisor = c(2, 3, 1),
     trust_volatility = .2
   )
@@ -228,6 +233,7 @@ test_that('newWeightsByDrift works', {
     id = 1:3,
     initial = rep(.75, 3),
     advice = c(0, 1, 1),
+    feedback = NA,
     advisor = c(2, 3, 1),
     trust_volatility = .2
   )
@@ -354,7 +360,7 @@ test_that('.biasCorrelation works', {
   load('data/basic-model.rda')
   load('data/bias-model.rda')
   bc <- .biasCorrelation(basic.model)
-  expect_lt(max(bc$r), .85)
+  expect_lt(max(bc$r), .9)
   expect_equal(bc, .biasCorrelation(basic.model, T))
   expect_error(
     expect_equal(
