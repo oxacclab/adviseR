@@ -305,7 +305,7 @@ simulationStep <- function(model, d) {
     # Updating weights
     if (bitwAnd(model$parameters$decision_flags[d], 1) == 1) {
       model$model$graphs[[d + 1]] <-
-        newWeights(
+        newWeightsByDrift(
           agents,
           model$model$graphs[[d]],
           model$parameters$confidence_weighted
