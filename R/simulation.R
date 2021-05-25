@@ -36,13 +36,9 @@
 #'   update function
 #' @param feedback_probability the proportion of trials on which feedback
 #'   occurs. Feedback is a broadcast signal revealing the true world value on a
-#'   given trial (perhaps with some noise). All agents implicitly trust the
-#'   feedback.
+#'   given trial. All agents implicitly trust the feedback.
 #' @param feedback_proportion the proportion of agents to which feedback is
 #'   given when it occurs
-#' @param feedback_sd the standard deviation of the noise around the feedback.
-#'   If this value is non-zero, the same approximate value is given to all
-#'   agents receiving feedback that round.
 #' @param starting_graph single number, vector, or n_agents-by-n_agents matrix
 #'   of starting trust weights between agents. Coerced to numeric. Can also be
 #'   a function taking the first generation of the agents tbl as an input and
@@ -104,7 +100,6 @@ runSimulation <- function(
   bias_update_slope = 1,
   feedback_probability = .05,
   feedback_proportion = 1.0,
-  feedback_sd = 0.0,
   starting_graph = NULL,
   random_seed = NA,
   .random_seed_agents = NA,
@@ -152,7 +147,6 @@ runSimulation <- function(
       bias_update_slope = bias_update_slope,
       feedback_probability = feedback_probability,
       feedback_proportion = feedback_proportion,
-      feedback_sd = feedback_sd,
       starting_graph_type = class(starting_graph)[1],
       starting_graph = starting_graph,
       random_seed = random_seed,
@@ -309,8 +303,7 @@ simulationStep <- function(model, d) {
   if (runif(1) < model$parameters$feedback_probability) {
     n_get_feedback <- round(nrow(agents) / model$parameters$feedback_proportion)
     get_feedback <- sample(agents$id, n_get_feedback)
-    feedback <- rnorm(1, sd = model$parameters$feedback_sd)
-    agents$feedback[get_feedback] <- feedback
+    agents$feedback[get_feedback] <- as.integer(agents$truth[1] > 0)
   }
 
   # Write output to the model

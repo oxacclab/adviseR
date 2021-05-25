@@ -375,11 +375,12 @@ sensitivityGraph <- function(model) {
 #' scale_alpha_manual scale_y_continuous
 #' @export
 biasEvolution <- function(model, summaryFun = stats::median) {
-  select(
+  d <- select(
     model$model$agents,
     .data$id,
     .data$decision,
-    .data$bias
+    .data$bias,
+    .data$feedback
   ) %>%
     nest(d = -.data$id) %>%
     mutate(d = map(.data$d, ~mutate(., group = .data$bias[[1]]))) %>%
@@ -394,7 +395,8 @@ biasEvolution <- function(model, summaryFun = stats::median) {
       ) != 2,
       skipBiasUpdate = factor(.data$skipBiasUpdate, levels = c(T, F))
     ) %>%
-    unnest(cols = .data$d) %>%
+    unnest(cols = .data$d)
+  d %>%
     ggplot(aes(x = .data$decision, y = .data$bias, colour = .data$group)) +
     geom_rect(aes(
       xmin = .data$decision - .5,
@@ -403,6 +405,7 @@ biasEvolution <- function(model, summaryFun = stats::median) {
       alpha = .data$skipBiasUpdate
     ), fill = 'grey85', colour = NA) +
     geom_hline(yintercept = .5, linetype = 'dashed') +
+    geom_point(alpha = .1, data = filter(d, !is.na(.data$feedback))) +
     geom_line(aes(group = paste0(.data$id)), alpha = .25) +
     stat_summary(geom = 'line', aes(group = .data$group),
                  size = 1, fun = summaryFun) +
