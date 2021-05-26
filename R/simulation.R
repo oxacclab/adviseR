@@ -301,7 +301,7 @@ simulationStep <- function(model, d) {
   agents$final <- bayes(agents$initial, agents$advice, agents$weight)
 
   if (runif(1) < model$parameters$feedback_probability) {
-    n_get_feedback <- round(nrow(agents) / model$parameters$feedback_proportion)
+    n_get_feedback <- round(nrow(agents) * model$parameters$feedback_proportion)
     get_feedback <- sample(agents$id, n_get_feedback)
     agents$feedback[get_feedback] <- as.integer(agents$truth[1] > 0)
   }

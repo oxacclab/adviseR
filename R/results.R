@@ -245,6 +245,8 @@ networkGraph <- function(model, timepoints = 2, ...) {
   biases <- NULL
   for (d in 1:model$parameters$n_decisions) {
     tmp <- model$model$graphs[[d]]
+    if (all(is.na(tmp)))
+      next()
     if (all(is.null(biases)) | !use_starting_bias)
       biases <- edge_attr(tmp, 'biasSimilarity')
 
@@ -457,6 +459,32 @@ inspectModel <- function(m) {
 
   dw <- .1
 
+  aovGraph <- weights %>%
+    ggplot(aes(x = .data$sameGroup, y = .data$weight,
+               colour = .data$group, fill = .data$group))
+
+  if (m$parameters$starting_graph_type != "function") {
+    aovGraph <- aovGraph +
+      geom_hline(
+        yintercept = m$parameters$starting_graph,
+        linetype = 'dashed'
+      )
+  }
+  aovGraph <- aovGraph +
+    geom_boxplot(outlier.shape = NA, size = 1, width = dw/2,
+                 aes(group = .data$sameGroup),
+                 colour = 'black') +
+    geom_line(aes(group = .data$id)) +
+    geom_segment(x = 1, xend = 2, y = .9, yend = .9, colour = 'black') +
+    geom_label(y = .9, x = 1.5, colour = 'black', fill = 'white',
+               aes(label = paste0('p ', .data$p)),
+               data = p) +
+    scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+    coord_cartesian(clip = 'off') +
+    facet_grid(~.data$group) +
+    labs(x = 'Group membership with advisor', y = 'Weight given to advice')
+  # caption = "Simulated trust for average agents.  Simulated agents' trust in other agents at the end of the simulation. Individual lines show the average trust for an agent in those of the same or different group. Violins and boxplots show the distributions of these averages. The groups are arbitrarily named and separate agents by bias strength (whether the bias is positive or negative). Both groups contain some agents with pronounced biases and some with negligible biases.  The dashed line indicates the starting trust level between all agents in the simulation."
+
   list(
 
     biasGraph = biasGraph(m),
@@ -473,24 +501,7 @@ inspectModel <- function(m) {
       error = function(e) {NULL}
     ),
 
-    aovGraph = weights %>%
-      ggplot(aes(x = .data$sameGroup, y = .data$weight,
-                 colour = .data$group, fill = .data$group)) +
-      geom_hline(yintercept = m$parameters$starting_graph,
-                 linetype = 'dashed') +
-      geom_boxplot(outlier.shape = NA, size = 1, width = dw/2,
-                   aes(group = .data$sameGroup),
-                   colour = 'black') +
-      geom_line(aes(group = .data$id)) +
-      geom_segment(x = 1, xend = 2, y = .9, yend = .9, colour = 'black') +
-      geom_label(y = .9, x = 1.5, colour = 'black', fill = 'white',
-                 aes(label = paste0('p ', .data$p)),
-                 data = p) +
-      scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-      coord_cartesian(clip = F) +
-      facet_grid(~.data$group) +
-      labs(x = 'Group membership with advisor', y = 'Weight given to advice'),
-    # caption = "Simulated trust for average agents.  Simulated agents' trust in other agents at the end of the simulation. Individual lines show the average trust for an agent in those of the same or different group. Violins and boxplots show the distributions of these averages. The groups are arbitrarily named and separate agents by bias strength (whether the bias is positive or negative). Both groups contain some agents with pronounced biases and some with negligible biases.  The dashed line indicates the starting trust level between all agents in the simulation."
+    aovGraph = tryCatch(aovGraph, error = function(e) {NULL}),
 
     # Plot bias evolution for each model
     biasEvolution = biasEvolution(m)
