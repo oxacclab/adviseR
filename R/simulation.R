@@ -98,8 +98,8 @@ runSimulation <- function(
   weighted_sampling_mean = 0,
   weighted_sampling_sd = 0,
   bias_update_slope = 1,
-  feedback_probability = .05,
-  feedback_proportion = 1.0,
+  feedback_probability = 1.0,
+  feedback_proportion = .05,
   starting_graph = NULL,
   random_seed = NA,
   .random_seed_agents = NA,
@@ -558,6 +558,8 @@ newWeightsByDrift <- function(agents, graph, confidence_weighted = T) {
 
   W <- as.vector(graph)
   m <- (agents$advisor - 1) * n_agents + agents$id
+  # It's important that this equation matches the one in code.cpp:trust_update
+  # because that keeps the simulations and parameter fitting in sync.
   x <- W[m] * (1 - agents$trust_volatility) + adviceAgree * agents$trust_volatility
 
   if (confidence_weighted) {

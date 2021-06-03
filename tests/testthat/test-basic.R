@@ -91,6 +91,7 @@ test_that('Feedback occurs at the expected rate', {
         is.na(
           runSimulation(
             feedback_probability = .5,
+            feedback_proportion = 1,
             random_seed = pi * 1e6
           )$model$agents$feedback
         )

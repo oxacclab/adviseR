@@ -159,8 +159,15 @@ test_that('Trust update skipped with mask', {
 
 test_that('Feedback forces agents towards 0 bias', {
   random_seed <- 20210524
-  m <- runSimulation(feedback_probability = 0, random_seed = random_seed)
-  m_fb <- runSimulation(feedback_probability = 1, random_seed = random_seed)
+  m <- runSimulation(
+    feedback_probability = 0,
+    random_seed = random_seed
+  )
+  m_fb <- runSimulation(
+    feedback_probability = 1,
+    feedback_proportion = 1,
+    random_seed = random_seed
+  )
   m <- m$model$agents
   m_fb <- m_fb$model$agents
   expect_gt(
