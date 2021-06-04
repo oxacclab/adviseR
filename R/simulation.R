@@ -311,14 +311,14 @@ simulationStep <- function(model, d) {
 
   # Updating bias for next time
   if (max(rows) != nrow(model$model$agents)) {
-    if (bitwAnd(model$parameters$decision_flags[d], 2) == 2) {
+    if (bitwAnd(model$parameters$decision_flags[[d]], 2) == 2) {
       # Nudge bias towards observed (i.e. based on final decision) truth
       model$model$agents[rows + model$parameters$n_agents, "bias"] <-
         getUpdatedBias(agents, model$parameters$bias_update_slope)
     }
 
     # Updating weights
-    if (bitwAnd(model$parameters$decision_flags[d], 1) == 1) {
+    if (bitwAnd(model$parameters$decision_flags[[d]], 1) == 1) {
       model$model$graphs[[d + 1]] <-
         newWeightsByDrift(
           agents,
