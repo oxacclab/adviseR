@@ -11,7 +11,10 @@ test_that('Simple simulation', {
   )
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
-  expect_equal(model$parameters, bias.model$parameters)
+  expect_equal(
+    model$parameters[names(model$parameters) != "truth_fun"],
+    bias.model$parameters[names(bias.model$parameters) != "truth_fun"]
+  )
   expect_equal(model$model$agents, bias.model$model$agents)
 })
 
@@ -36,7 +39,10 @@ test_that('Custom model specification', {
   )
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
-  expect_equal(model$parameters, bias.model$parameters)
+  expect_equal(
+    model$parameters[names(model$parameters) != "truth_fun"],
+    bias.model$parameters[names(bias.model$parameters) != "truth_fun"]
+  )
   expect_equal(model$model$agents, bias.model$model$agents)
 })
 

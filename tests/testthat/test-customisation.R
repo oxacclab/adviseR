@@ -9,7 +9,10 @@ test_that('Custom truth_fun', {
     truth_fun = function(m, d) d %% 5 - 2,
     truth_sd = 1
   )
-  expect_equal(model$parameters, truth_fun.model$parameters)
+  expect_equal(
+    model$parameters[names(model$parameters) != "truth_fun"],
+    truth_fun.model$parameters[names(truth_fun.model$parameters) != "truth_fun"]
+  )
   expect_equal(model$model$agents, truth_fun.model$model$agents)
 })
 
