@@ -437,11 +437,18 @@ weighted <- function(a, b, weight_a) {
 #' consider it very unlikely a highly trusted advisor disagrees with us if we
 #' are right).
 bayes <- function(initial, advice, weight, compression = .05) {
+  # Convert judgements to side-relative confidence judgements
+  left <- initial < .5
+  initial[left] <- 1 - initial[left]
+  advice[left] <- 1 - advice[left]
   if (compression) {
     weight <- pmin(1 - compression, pmax(weight, compression))
   }
   weight <- ifelse(adviceAgrees(initial, advice), weight, 1 - weight)
-  (initial * weight) / (initial * weight + (1 - initial) * (1 - weight))
+  x <- (initial * weight) / (initial * weight + (1 - initial) * (1 - weight))
+  # Convert back
+  x[left] <- 1 - x[left]
+  x
 }
 
 #' Return a measure of how compatible advice is with an initial decision

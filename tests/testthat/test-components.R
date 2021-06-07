@@ -140,6 +140,13 @@ test_that('bayes() updating works', {
   expect_equal(b[5], b[6])
   # Symmetry over disagree|trust and 1-(agree|trust)
   expect_equal(b[3], 1 - b[4])
+  # Check update goes in the expected direction
+  x$w <- .75
+  b <- bayes(x$i, x$a, x$w)
+  expect_lt(b[1], x$i[1]) # agree it's left
+  expect_gt(b[2], x$i[2]) # disagree it's left
+  expect_lt(b[5], x$i[5]) # disagree it's right
+  expect_gt(b[6], x$i[6]) # agree it's right
 })
 
 test_that('adviceCompatibility works', {
