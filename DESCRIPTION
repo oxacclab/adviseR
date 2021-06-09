@@ -30,6 +30,7 @@ Imports:
     purrr,
     ez,
     tidyr,
-    Rcpp
+    Rcpp,
+    Ckmeans.1d.dp
 LinkingTo: 
     Rcpp

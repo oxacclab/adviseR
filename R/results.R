@@ -57,6 +57,16 @@ detailGraphs <- function(model) {
 
 }
 
+#' Return the matrix representation of the attributes of the edges of an igraph
+#' @param g connectivity igraph
+#' @param attr attribute to use for values
+#' @export
+graph_to_mat <- function(g, attr = 'weight') {
+  x <- g[attr = attr]
+  n <- sqrt(length(x))
+  matrix(x, n, n)
+}
+
 #' Return the ratio of weights of in-:out-group connections
 #' @param g graph for which to determine the ratio
 #' @param original_groups whether to use the original groups (\code{T}) or
@@ -73,6 +83,23 @@ groupRatio <- function(g, original_groups = T) {
   }
 
   mean(a$weight[a$sameGroup]) / mean(a$weight[!a$sameGroup])
+}
+
+#' Return the number of clusters identified in a connectivity matrix by Ckmeans.1d.dp
+#' @param g connectivity igraph
+#' @inheritDotParams Ckmeans.1d.dp::Ckmeans.1d.dp
+#' @param .full return the full Ckmeans.1d.dp output
+#' @importFrom Ckmeans.1d.dp Ckmeans.1d.dp
+#' @export
+.cluster_count <- function(g, ..., .full = F) {
+  if ("list" %in% class(g))
+    return(lapply(g, function(x) .cluster_count(x, ..., .full = .full)))
+  x <- edge_attr(g, 'weight')
+  tmp <- suppressWarnings(Ckmeans.1d.dp(x, ...))
+  if (.full)
+    tmp
+  else
+    length(tmp$centers)
 }
 
 #' A neat string of the parameters for a model for inclusion in graphs

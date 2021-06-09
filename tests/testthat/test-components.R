@@ -376,3 +376,12 @@ test_that('.biasCorrelation works', {
     )
   )
 })
+
+test_that('.cluster_count works', {
+  load('data/bias-model.rda')
+  expect_equal(length(.cluster_count(bias.model$model$graphs[[10]])), 1)
+  expect_equal(
+    class(.cluster_count(bias.model$model$graphs[[10]], .full = T)),
+    "Ckmeans.1d.dp"
+  )
+})
