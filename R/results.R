@@ -459,7 +459,8 @@ weightEvolution <- function(
   binwidth = .025,
   k = 1:2
 ) {
-  ds <- model$model$agents$decision[decisions(model$model$agents$decision)]
+  d <- unique(model$model$agents$decision)
+  ds <- d[d %in% decisions(d) & bitwAnd(model$parameters$decision_flags, 2)]
   weights <- NULL
   centers <- NULL
   for (d in ds) {
@@ -495,11 +496,11 @@ weightEvolution <- function(
     ) +
     geom_density_ridges(
       aes(x = .data$weight), colour = NA, fill = 'grey',
-      bandwidth = binwidth
+      bandwidth = binwidth, scale = 1
     ) +
     geom_density_ridges(
       aes(x = .data$weight), alpha = .5, colour = NA,
-      binwidth = binwidth, stat = 'binline'
+      binwidth = binwidth, stat = 'binline', scale = 1
     ) +
     scale_x_continuous(limits = 0:1)
 }
