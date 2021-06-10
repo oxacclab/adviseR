@@ -442,6 +442,68 @@ biasEvolution <- function(model, summaryFun = stats::median) {
     scale_alpha_manual(values = c(1, 0), breaks = c(T, F), drop = F)
 }
 
+#' Plot evolving histograms for the advice weights of a model
+#' @param model model to inspect
+#' @param decisions function taking an integer vector of decision numbers and
+#'   returning a logical vector of whether to plot weights at that decision
+#' @param binwidth width of the histogram bins
+#' @param k cluster counts to compare with .cluster_count
+#' @importFrom dplyr %>% tibble bind_rows mutate
+#' @importFrom ggplot2 ggplot geom_rect scale_x_continuous aes
+#' @importFrom ggridges geom_density_ridges
+#' @importFrom rlang .data
+#' @export
+weightEvolution <- function(
+  model,
+  decisions = function(d) as.integer(seq(1, length(d), length.out = 10)),
+  binwidth = .025,
+  k = 1:2
+) {
+  ds <- model$model$agents$decision[decisions(model$model$agents$decision)]
+  weights <- NULL
+  centers <- NULL
+  for (d in ds) {
+    x <- model$model$graphs[[d]]
+    .c <- .cluster_count(x, k = k, .full = T)
+    weights <- bind_rows(
+      weights,
+      tibble(
+        weight = edge_attr(x, 'weight'),
+        cluster = .c$cluster ,
+        decision = d
+      )
+    )
+    centers <- bind_rows(
+      centers,
+      tibble(
+        decision = d,
+        cluster = 1:length(.c$centers),
+        center = .c$centers
+      ))
+  }
+  weights <- mutate(weights, across(-.data$weight, factor))
+  centers <- mutate(centers, across(-.data$center, factor))
+  weights %>%
+    ggplot(aes(y = .data$decision, fill = .data$cluster)) +
+    geom_rect(
+      aes(
+        xmin = .data$center, xmax = .data$center,
+        ymin = .data$decision, ymax = as.numeric(.data$decision) + 1,
+        colour = .data$cluster,
+      ),
+      fill = NA, size = .75, linetype = 'dotted', data = centers
+    ) +
+    geom_density_ridges(
+      aes(x = .data$weight), colour = NA, fill = 'grey',
+      bandwidth = binwidth
+    ) +
+    geom_density_ridges(
+      aes(x = .data$weight), alpha = .5, colour = NA,
+      binwidth = binwidth, stat = 'binline'
+    ) +
+    scale_x_continuous(limits = 0:1)
+}
+
 #' Return a list with a variety of model graphs and stats
 #' @param m model to inspect
 #' @importFrom igraph edge_attr E V head_of
@@ -531,6 +593,8 @@ inspectModel <- function(m) {
     aovGraph = tryCatch(aovGraph, error = function(e) {NULL}),
 
     # Plot bias evolution for each model
-    biasEvolution = biasEvolution(m)
+    biasEvolution = biasEvolution(m),
+
+    weightEvolution = weightEvolution(m)
   )
 }

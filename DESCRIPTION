@@ -20,6 +20,7 @@ Suggests:
 Imports:
     dplyr,
     ggplot2,
+    ggridges,
     tibble,
     rlang,
     igraph,
