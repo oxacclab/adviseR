@@ -460,7 +460,7 @@ weightEvolution <- function(
   k = 1:2
 ) {
   d <- unique(model$model$agents$decision)
-  ds <- d[d %in% decisions(d) & bitwAnd(model$parameters$decision_flags, 2)]
+  ds <- d[d %in% decisions(d) & bitwAnd(model$parameters$decision_flags, 1)]
   weights <- NULL
   centers <- NULL
   for (d in ds) {
@@ -486,21 +486,21 @@ weightEvolution <- function(
   centers <- mutate(centers, across(-.data$center, factor))
   weights %>%
     ggplot(aes(y = .data$decision, fill = .data$cluster)) +
-    geom_rect(
-      aes(
-        xmin = .data$center, xmax = .data$center,
-        ymin = .data$decision, ymax = as.numeric(.data$decision) + 1,
-        colour = .data$cluster,
-      ),
-      fill = NA, size = .75, linetype = 'dotted', data = centers
-    ) +
     geom_density_ridges(
       aes(x = .data$weight), colour = NA, fill = 'grey',
-      bandwidth = binwidth, scale = 1
+      bandwidth = binwidth, scale = .8
     ) +
     geom_density_ridges(
       aes(x = .data$weight), alpha = .5, colour = NA,
-      binwidth = binwidth, stat = 'binline', scale = 1
+      binwidth = binwidth, stat = 'binline', scale = .8
+    ) +
+    geom_rect(
+      aes(
+        xmin = .data$center, xmax = .data$center,
+        ymin = .data$decision, ymax = as.numeric(.data$decision) + .8,
+        colour = .data$cluster,
+      ),
+      fill = NA, size = .75, linetype = 'dotted', data = centers
     ) +
     scale_x_continuous(limits = 0:1)
 }
