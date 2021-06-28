@@ -116,6 +116,9 @@ test_that('selectAdvisorSimple works', {
   # Probabilistic with weighted selection
   y <- sapply(1:5000, function(i) selectAdvisorSimple(g, weightedSelection = 5))
   expect_equal(round(rowMeans(y), 1), c(2.7, 2.0, 1.9))
+  # Probabilistic with negative weighted selection
+  z <- sapply(1:5000, function(i) selectAdvisorSimple(g, weightedSelection = -5))
+  expect_equal(round(rowMeans(z), 1), c(2.3, 2.0, 1.1))
 })
 
 test_that('weighted works', {

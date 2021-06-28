@@ -487,7 +487,7 @@ weightEvolution <- function(
   weights %>%
     ggplot(aes(y = .data$decision, fill = .data$cluster)) +
     geom_density_ridges(
-      aes(x = .data$weight), colour = NA, fill = 'grey',
+      aes(x = .data$weight), colour = 'black', fill = NA, linetype = 'dashed',
       bandwidth = binwidth, scale = .8
     ) +
     geom_density_ridges(

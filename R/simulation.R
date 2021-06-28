@@ -396,13 +396,23 @@ selectAdvisor <- function(graph, exponent = 0) {
 #' where the most preferred advisor has probability .5
 #' @return vector of the advisor id selected by each agent
 selectAdvisorSimple <- function(graph, weightedSelection = 0) {
-  # Shift trust to centre around the mean (ignoring self)
-  weight_max <- apply(graph, 1, max)
+  g <- graph
+  # Shift trust to tail off from the max (for +ve WS) or min (for -ve WS)
+  diag(g) <- -Inf
+  weight_max <- apply(g, 1, max)
+  diag(g) <- Inf
+  weight_min <- apply(g, 1, min)
+  g[weightedSelection < 0, ] <-
+    g[weightedSelection < 0, ] - weight_min[weightedSelection < 0]
+  g[weightedSelection >= 0, ] <-
+    g[weightedSelection >= 0, ] - weight_max[weightedSelection >= 0]
+
+  diag(g) <- 0
   # Weight trust matrix by exponent
-  probabilities <- 2 * sigmoid(graph - weight_max, weightedSelection)
+  probabilities <- 2 * sigmoid(g, weightedSelection)
   # never ask yourself
   diag(probabilities) <- 0
-  sapply(1:nrow(graph), function(i)
+  sapply(1:nrow(g), function(i)
     sample(
       col(probabilities)[i, ], # ids are column numbers
       size = 1,
