@@ -123,6 +123,10 @@ runSimulation <- function(
     }
   )
 
+  # Check decision_flags is in appropriate format
+  if (length(decision_flags) == 1 && class(decision_flags) == 'list')
+    decision_flags <- decision_flags[[1]]
+
   # Prepare output
   out <- list(
     times = list(

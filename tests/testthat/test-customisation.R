@@ -196,11 +196,12 @@ test_that('Custom model specification via tibble', {
         )
       ))
     ),
+    decision_flags = map(1, ~ bias.model$parameters$decision_flags),
     .random_seed_simulation = bias.model$parameters$.random_seed_simulation,
     random_seed = bias.model$parameters$random_seed,
     .random_seed_agents = bias.model$parameters$.random_seed_agents
   )
-  model <- do.call(runSimulation, params[1,])
+  expect_silent(model <- do.call(runSimulation, params[1,]))
   # Can't do a simple identical check because $timings will be different,
   # and $graphs have different ids (presumably to avoid conflicts)
   expect_equal(
