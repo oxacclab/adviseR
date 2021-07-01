@@ -181,6 +181,11 @@ runSimulation <- function(
           starting_graph = starting_graph
         )
       } else {
+        # correct for models fed in via converting mapped tibble rows in do.call
+        if (length(model) == 1) model <- model[[1]]
+        if (!all(c("agents", "graphs") %in% names(model))) {
+          stop('supplied model must have names "agents" and "graphs"')
+        }
         out$model <- model
       }
     }

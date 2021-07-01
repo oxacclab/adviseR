@@ -1,6 +1,8 @@
 context('Custom functionality')
 library(adviseR)
 library(igraph)
+library(tibble)
+library(tidyr)
 
 test_that('Custom truth_fun', {
   load('data/truth_fun-model.rda')
@@ -177,6 +179,35 @@ test_that('Feedback forces agents towards 0 bias', {
     sum(m$bias[m$decision == max(m$decision)]),
     sum(m_fb$bias[m_fb$decision == max(m_fb$decision)])
   )
+})
+
+test_that('Custom model specification via tibble', {
+  load('data/bias-model.rda')
+  params <- tibble(
+    bias_volatility_mean = bias.model$parameters$bias_volatility_mean,
+    bias_volatility_sd = bias.model$parameters$bias_volatility_sd,
+    model = map(1, ~ list(
+      agents = bias.model$model$agents,
+      graphs = list(
+        as_adjacency_matrix(
+          bias.model$model$graphs[[1]],
+          attr = 'weight',
+          sparse = F
+        )
+      ))
+    ),
+    .random_seed_simulation = bias.model$parameters$.random_seed_simulation,
+    random_seed = bias.model$parameters$random_seed,
+    .random_seed_agents = bias.model$parameters$.random_seed_agents
+  )
+  model <- do.call(runSimulation, params[1,])
+  # Can't do a simple identical check because $timings will be different,
+  # and $graphs have different ids (presumably to avoid conflicts)
+  expect_equal(
+    model$parameters[names(model$parameters) != "truth_fun"],
+    bias.model$parameters[names(bias.model$parameters) != "truth_fun"]
+  )
+  expect_equal(model$model$agents, bias.model$model$agents)
 })
 
 if (F) {
