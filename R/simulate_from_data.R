@@ -50,7 +50,7 @@ simulateFromData <- function(
   trust <- matrix(
     starting_trust,
     nrow = nrow(d),
-    ncol = length(unique(d$advisorIndex))
+    ncol = max(d$advisorIndex, na.rm = T)  # inefficient but allows data subsets
   )
 
   # Simulate the trust updating

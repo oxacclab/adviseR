@@ -211,6 +211,13 @@ test_that('Custom model specification via tibble', {
   expect_equal(model$model$agents, bias.model$model$agents)
 })
 
+test_that('simulateFromData works with subsets of data', {
+  load('data/empirical_data.rda')
+  empirical_data <- empirical_data[empirical_data$advisorIndex > 2, ]
+  m <- simulateFromData(empirical_data, data.frame(a = 1, b = 1), T)
+  expect_equal("tbl" %in% class(m), T)
+})
+
 if (F) {
   truth_fun.model <- model
   save(truth_fun.model, file = 'tests/testthat/data/truth_fun-model.rda')
