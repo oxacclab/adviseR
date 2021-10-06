@@ -1,12 +1,14 @@
 # adviseR
 
 <!-- badges: start -->
+[![DOI](https://zenodo.org/badge/302095511.svg)](https://zenodo.org/badge/latestdoi/302095511)
 ![R-CMD-check](https://github.com/oxacclab/adviseR/workflows/R-CMD-check/badge.svg)
 [![codecov](https://codecov.io/gh/oxacclab/adviseR/branch/master/graph/badge.svg)](https://codecov.io/gh/oxacclab/adviseR)
 <!-- badges: end -->
 
 The goal of adviseR is to model the interaction of simple interconnected agents who have beliefs and exchange information.
 The agents can vary in their simplicity and their homogeneity.
+For an example of implementation, and details about the models, please see the first set of modelling results in the [Exploring Social Metacognition](https://github.com/mjaquiery/oxforddown) DPhil thesis.
 
 ## Installation
 
@@ -61,3 +63,5 @@ params <- data.frame(
 )
 models <- runSimulations(params, cores = nrow(params))
 ```
+
+
